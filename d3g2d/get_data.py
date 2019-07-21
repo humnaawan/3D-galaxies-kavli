@@ -69,8 +69,8 @@ def get_data(run_name, z, haloIDs, outdir, print_progress=True, readme=None):
     """
     base_url = 'http://www.tng-project.org/api/'
     # --------------------------------------------------------------------------
-    if run_name != 'Illustris-1' and run_name != 'TNG-100':
-        raise ValueError('run_name must be either Illustris-1 or TNG-100. Input: %s' % run_name)
+    if run_name != 'Illustris-1' and run_name != 'TNG100-1':
+        raise ValueError('run_name must be either Illustris-1 or TNG100-1. Input: %s' % run_name)
     # set up
     current_dir = os.getcwd()
     # --------------------------------------------------------------------------

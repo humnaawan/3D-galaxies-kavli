@@ -28,7 +28,7 @@ for halo_id in halo_ids:
     readme.update(to_write=update)
     if not quiet: print(update)
     filename = get_shape_main(source_dir='%s/Illustris-1_halo%s_z0' % (data_dir, halo_id),
-                              fname='cutout_%s.hdf5' % halo_id)
+                              fname='star_coords_cutout_%s.hdf5' % halo_id)
     update = 'Saved %s\n' % filename
     update += '## Time taken: %s\n'%get_time_passed(start_time)
     readme.update(to_write=update)

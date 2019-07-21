@@ -187,8 +187,8 @@ def get_shape_main(source_dir, fname):
     z = snap2z(snap_num)
     pos = np.array(info['SubhaloPos']) / (1 + z) / h0
 
-    xpart_star = read_cutout('%s/%s' % (source_dir, fname), PartType=4,
-                             key='Coordinates', z=z) - pos
+    with h5py.File('%s/%s' % (source_dir, fname), 'r') as f:
+        xpart_star = f['star_coords'] - pos
 
     Rstar = np.arange(1, 101, 1)
     axis_ratios_star, evectors_star = shape(Rstar, xpart_star)

@@ -4,7 +4,7 @@ import pickle
 import sys
 import time
 
-from .helpers_misc import get_time_passed
+from .helpers_misc import get_time_passed, save_star_coords
 
 __all__ = ['get_data']
 
@@ -47,7 +47,7 @@ def http_get(path, params=None, print_progress=True):
                     sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)) )
                     sys.stdout.flush()
             # --------
-        if print_progress: print('All done.\n')
+        if print_progress: print('\nAll done.\n')
         return filename # return the filename string
 
     return r
@@ -75,7 +75,7 @@ def get_data(run_name, z, haloIDs, outdir, print_progress=True, readme=None):
     current_dir = os.getcwd()
     # --------------------------------------------------------------------------
     for haloID in haloIDs:
-        start_time = time.time()
+        start_time0 = time.time()
         # make the folder where to output things
         out_folder = '%s/%s_halo%s_z%s' % (outdir, run_name, haloID, z)
         if readme is not None:
@@ -100,20 +100,40 @@ def get_data(run_name, z, haloIDs, outdir, print_progress=True, readme=None):
         filename = 'info.dat'
         with open(filename, 'wb') as f:
             pickle.dump(info_dict, f)
-        #
+        # update readme
         if readme is not None:
             readme.update(to_write='Saved %s' % (filename))
         # --------------------------------------------------------------------------
         # get the cutout
         # --------------------------------------------------------------------------
         url += '/cutout.hdf5'
-        filename = http_get(url, print_progress=print_progress)
+        start_time = time.time()
+        filename_cutout = http_get(url, print_progress=print_progress)
+        # update readme
         if readme is not None:
-            update = 'Saved %s\n' % (filename)
+            update = 'Saved %s; filesize = %.2f GB\n' % (filename_cutout, os.path.getsize(filename_cutout)/1e9)
             update += '## Time taken: %s\n'%get_time_passed(start_time)
             readme.update(to_write=update)
-    #
+
+        # --------------------------------------------------------------------------
+        # read the cutout and save only the star coordinates; remove full cutout.
+        # --------------------------------------------------------------------------
+        start_time = time.time()
+        # save star coords
+        filename_coords = save_star_coords(fname_cutout=filename_cutout, z=z)
+        # now remove the cutout file
+        os.remove(filename_cutout)
+        # update readme
+        if readme is not None:
+            update = 'Saved star coords in %s; filesize = %.2f GB\n' % (filename_coords,
+                                                                        os.path.getsize(filename_coords)/1e9)
+            update += 'Removed %s\n' % filename_cutout
+            update += '## Time taken: %s\n'%get_time_passed(start_time)
+            update += '-----------------------------------------------\n'
+            readme.update(to_write=update)
+    # change back to starting directory.
     os.chdir(current_dir)
     if readme is not None:
-        readme.update(to_write='All done.')
+        update = 'All done.\n## Time taken: %s\n'%get_time_passed(start_time0)
+        readme.update(to_write=update)
     return

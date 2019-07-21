@@ -3,7 +3,7 @@ import h5py
 
 from .settings import h0
 
-__all__ = ['get_time_passed', 'read_cutout']
+__all__ = ['get_time_passed', 'read_cutout', 'save_star_coords']
 
 # ------------------------------------------------------------------------------
 def get_time_passed(time0, string=True):
@@ -66,3 +66,18 @@ def read_cutout(fname, z, PartType=4, key='Coordinates'):
         # mass in M_sun
         data /= h0
     return data
+
+def save_star_coords(fname_cutout, z):
+    """
+    This function reads in the full cutout and saves the star particle coords as a separate file.
+    """
+    star_coords = read_cutout(fname=fname_cutout, z=z,
+                              PartType=4, key='Coordinates')
+
+    # now just save the data.
+    filename = 'star_coords_%s' % fname_cutout.split('/')[-1]
+    h = h5py.File(filename, 'w')
+    dset = h.create_dataset('star_coords', data=star_coords)
+    h.close()
+
+    return filename

@@ -1,0 +1,10 @@
+*.pyc
+*.py~
+.DS_Store
+.ipynb_checkpoints/
+*egg-info/*
+
+data/*
+outputs/*
+!data/readme.md
+!outputs/readme.md

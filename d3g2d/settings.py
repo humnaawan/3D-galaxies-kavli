@@ -2,7 +2,7 @@ h0 = 0.704
 illustris_snap2z = {'z': 0.0, 'snap': 135}
 tng_snap2z = {'z': 0.4, 'snap': 72}
 
-felipes_datapath = '/Users/humnaawan/repos/3D-galaxies-kavli/data/galaxies_stellarmaps_tng75_11.2_highres.hdf5'
+summary_datapath = '/Users/humnaawan/repos/3D-galaxies-kavli/data/tng_2d_summary/'
 
 # plotting params
 fontsize = 18

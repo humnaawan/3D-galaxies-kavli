@@ -1,7 +1,6 @@
-import datetime, time, socket
-import h5py
+import datetime, time, socket, os
 from d3g2d import get_shape_main, readme as readme_obj, get_time_passed
-from d3g2d import tng_snap2z, illustris_snap2z, felipes_datapath
+from d3g2d import tng_snap2z, illustris_snap2z, summary_datapath
 # ------------------------------------------------------------------------------
 from optparse import OptionParser
 parser = OptionParser()
@@ -29,22 +28,23 @@ readme = readme_obj(outdir=data_dir, readme_tag=readme_tag, first_update=update)
 readme.run()
 
 if test:
-    halo_ids = [5, 16941]
+    haloIDs = [5, 16941]
     z = illustris_snap2z['z']
     sim_name = 'Illustris-1'
 else:
-    with h5py.File(felipes_datapath, 'r') as f:
-        halo_ids = f['catsh_id'][:]
+    haloIDs = []
+    for f in [f for f in os.listdir(summary_datapath)]:
+        haloIDs.append( int(f.split('_')[1]) )
     z = tng_snap2z['z']
     sim_name = 'TNG100-1'
 
-for halo_id in halo_ids:
+for haloID in haloIDs:
     start_time = time.time()
-    update = 'Getting shape data for halo %s'  % halo_id
+    update = 'Getting shape data for halo %s'  % haloID
     readme.update(to_write=update)
     if not quiet: print(update)
-    filename = get_shape_main(source_dir='%s/%s_halo%s_z%s' % (data_dir, sim_name, halo_id, z),
-                              fname='cutout_%s.hdf5' % halo_id,
+    filename = get_shape_main(source_dir='%s/%s_halo%s_z%s' % (data_dir, sim_name, haloID, z),
+                              fname='cutout_%s.hdf5' % haloID,
                               test_illustris=test)
     update = 'Saved %s\n' % filename
     update += '## Time taken: %s\n'%get_time_passed(start_time)

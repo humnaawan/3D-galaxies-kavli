@@ -5,6 +5,7 @@ import sys
 import time
 
 from .helpers_misc import get_time_passed, save_star_coords
+from .settings import illustris_snap2z, tng_snap2z
 
 __all__ = ['get_data']
 
@@ -67,12 +68,20 @@ def get_data(run_name, z, haloIDs, outdir, print_progress=True, readme=None):
     * readme (optional): readme object or None
 
     """
-    base_url = 'http://www.tng-project.org/api/'
+    base_url = 'http://www.tng-project.org/api'
     # --------------------------------------------------------------------------
     if run_name != 'Illustris-1' and run_name != 'TNG100-1':
         raise ValueError('run_name must be either Illustris-1 or TNG100-1. Input: %s' % run_name)
     # set up
     current_dir = os.getcwd()
+    if run_name == 'Illustris-1':
+        z = illustris_snap2z['z']
+        snap = illustris_snap2z['snap']
+    else:
+        z = tng_snap2z['z']
+        snap = tng_snap2z['snap']
+
+    params = {'stars' : 'Coordinates'}
     # --------------------------------------------------------------------------
     for haloID in haloIDs:
         start_time0 = time.time()
@@ -89,7 +98,10 @@ def get_data(run_name, z, haloIDs, outdir, print_progress=True, readme=None):
         # get halo info
         # --------------------------------------------------------------------------
         # based on https://github.com/HongyuLi2016/illustris-tools/blob/master/data/illustris-get_cutout.py
-        url = "%s/%s/snapshots/z=%s/subhalos/%s" % (base_url, run_name, z, haloID)
+        url = "%s/%s/snapshots/%s/subhalos/%s" % (base_url, run_name, snap, haloID)
+        if readme is not None:
+            update = '\nGetting info from %s' % url
+            readme.update(to_write=update)
         info_url = http_get(url, print_progress=print_progress)['meta']['info']
         info = http_get(info_url, print_progress=print_progress)
         # set up the dictionary
@@ -107,30 +119,18 @@ def get_data(run_name, z, haloIDs, outdir, print_progress=True, readme=None):
         # get the cutout
         # --------------------------------------------------------------------------
         url += '/cutout.hdf5'
+        if readme is not None:
+            update = '\nGetting cutout from %s' % url
+            readme.update(to_write=update)
         start_time = time.time()
-        filename_cutout = http_get(url, print_progress=print_progress)
+        filename_cutout = http_get(url, params=params, print_progress=print_progress)
         # update readme
         if readme is not None:
             update = 'Saved %s; filesize = %.2f GB\n' % (filename_cutout, os.path.getsize(filename_cutout)/1e9)
+            update += 'From %s\n' % url
             update += '## Time taken: %s\n'%get_time_passed(start_time)
             readme.update(to_write=update)
 
-        # --------------------------------------------------------------------------
-        # read the cutout and save only the star coordinates; remove full cutout.
-        # --------------------------------------------------------------------------
-        start_time = time.time()
-        # save star coords
-        filename_coords = save_star_coords(fname_cutout=filename_cutout, z=z)
-        # now remove the cutout file
-        os.remove(filename_cutout)
-        # update readme
-        if readme is not None:
-            update = 'Saved star coords in %s; filesize = %.2f GB\n' % (filename_coords,
-                                                                        os.path.getsize(filename_coords)/1e9)
-            update += 'Removed %s\n' % filename_cutout
-            update += '## Time taken: %s\n'%get_time_passed(start_time)
-            update += '-----------------------------------------------\n'
-            readme.update(to_write=update)
     # change back to starting directory.
     os.chdir(current_dir)
     if readme is not None:

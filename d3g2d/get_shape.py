@@ -125,7 +125,7 @@ def get_shape_main(source_dir, fname, test_illustris=False):
         Rstar = np.arange(1, 101, 1)
     else:
         z = tng_snap2z['z']
-        Rstar = [20, 100]
+        Rstar = np.arange(20, 160, 10)
     # get some data
     with open('%s/info.dat'%source_dir, 'rb') as f:
         info = pickle.load(f)

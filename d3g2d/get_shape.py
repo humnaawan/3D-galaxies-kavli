@@ -110,7 +110,7 @@ def get_shape(x, mpart, Rb=20., decrease=True):
 
     return ba, ca, angle, Tiv
 
-def get_shape_main(source_dir, fname):
+def get_shape_main(source_dir, fname, test_illustris=False):
     """
     Modified from:
     https://github.com/HongyuLi2016/illustris-tools/blob/435dceb93802547394b1257228c724b2a502d4cd/shape/illustris-get_shape.py#L25-L49
@@ -120,9 +120,12 @@ def get_shape_main(source_dir, fname):
 
     """
     # set some things up
-    z = illustris_snap2z['z'] # replaces snapznum output in Hongyu's code
-    Rstar = np.arange(1, 101, 1)
-
+    if test_illustris:
+        z = illustris_snap2z['z'] # replaces snapznum output in Hongyu's code
+        Rstar = np.arange(1, 101, 1)
+    else:
+        z = tng_snap2z['z']
+        Rstar = [20, 100]
     # get some data
     with open('%s/info.dat'%source_dir, 'rb') as f:
         info = pickle.load(f)

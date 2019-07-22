@@ -1,11 +1,12 @@
 import pickle
 import numpy as np
 import numpy.linalg as LA
+import os
 
 from .helpers_misc import read_cutout
 from .settings import h0, illustris_snap2z, tng_snap2z
 
-__all__ = ['get_shape_main']
+__all__ = ['get_shape_main', 'get_shape_class']
 
 def shape(R, xpart):
     """
@@ -143,4 +144,38 @@ def get_shape_main(source_dir, fname, test_illustris=False):
     with open('%s/%s' % (source_dir, filename), 'wb') as f:
         pickle.dump(rst, f)
 
+    return filename
+
+def get_shape_class(data_dir, startwith_tag='TNG', Rdecider=100):
+    shapes, haloIds = [], []
+    # loop over the local foders; each folder is for a specific halo
+    for i, folder in enumerate([f for f in os.listdir(data_dir) if f.startswith(startwith_tag)]):
+        # ---------------------------------------------------------------------
+        # now read in the data produced from my version
+        file = [ f for f in os.listdir('%s/%s' % (data_dir, folder)) if f.startswith('shape_')]
+        if len(file) == 1:
+            file = file[0]
+            with open('%s/%s/%s' % (data_dir, folder, file), 'rb') as f:
+                data_now = pickle.load(f)
+
+            ind = np.where( data_now['Rstar'] == Rdecider )[0]
+            if ( ( data_now['b/a'][ind] - data_now['c/a'][ind]) < 0.2 ) and (data_now['b/a'][ind] < 0.8):
+                shapes.append('P')
+            elif ( ( data_now['b/a'][ind] - data_now['c/a'][ind]) > 0.2 ) and (data_now['b/a'][ind] < 0.8):
+                shapes.append('T')
+            elif ( ( data_now['b/a'][ind] - data_now['c/a'][ind]) > 0.2 ) and (data_now['b/a'][ind] > 0.8):
+                shapes.append('O')
+            else:
+                shapes.append('S')
+            # append the id too
+            haloIds.append( int(folder.split('halo')[-1].split('_')[0]) )
+        else:
+            raise ValueError('Somethings wrong.')
+
+    filename = 'shape%s_classes_%shaloIds.pickle' % (Rdecider, len(haloIds) )
+    rst = {'haloId': haloIds,
+           'shape': shapes
+           }
+    with open('%s/%s' % (data_dir, filename), 'wb') as f:
+        pickle.dump(rst, f)
     return filename

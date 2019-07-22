@@ -1,6 +1,6 @@
 import datetime, time, socket, os
 from d3g2d import get_shape_main, readme as readme_obj, get_time_passed
-from d3g2d import tng_snap2z, illustris_snap2z, summary_datapath
+from d3g2d import tng_snap2z, illustris_snap2z, summary_datapath, get_shape_class
 # ------------------------------------------------------------------------------
 from optparse import OptionParser
 parser = OptionParser()
@@ -38,6 +38,7 @@ else:
     z = tng_snap2z['z']
     sim_name = 'TNG100-1'
 
+# run analysis to get axis ratios etc.
 for haloID in haloIDs:
     start_time = time.time()
     update = 'Getting shape data for halo %s'  % haloID
@@ -50,3 +51,11 @@ for haloID in haloIDs:
     update += '## Time taken: %s\n'%get_time_passed(start_time)
     readme.update(to_write=update)
     if not quiet: print(update)
+
+# now classify
+start_time = time.time()
+filename = get_shape_class(data_dir=data_dir, startwith_tag=sim_name, Rdecider=100)
+update = 'Saved %s\n' % filename
+update += '## Time taken: %s\n'%get_time_passed(start_time)
+readme.update(to_write=update)
+if not quiet: print(update)

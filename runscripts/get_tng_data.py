@@ -1,11 +1,14 @@
 import datetime, time, socket
-from d3g2d import get_data, readme as readme_obj, illustris_snap2z
+import h5py
+from d3g2d import get_data, readme as readme_obj, tng_snap2z, felipes_datapath
 
 # ------------------------------------------------------------------------------
-outdir = '/Users/humnaawan/repos/3D-galaxies-kavli/outputs/test_illustris/'
-run_name = 'Illustris-1'
-z = illustris_snap2z['z']
-haloIDs = [16941, 5]
+outdir = '/Users/humnaawan/repos/3D-galaxies-kavli/outputs/tng-100/'
+run_name = 'TNG100-1'
+z = tng_snap2z['z']
+
+with h5py.File(felipes_datapath, 'r') as f:
+    haloIDs = f['catsh_id'][:]
 # ------------------------------------------------------------------------------
 # set up the readme
 start_time = time.time()

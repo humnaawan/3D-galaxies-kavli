@@ -1,8 +1,8 @@
 import pickle
 import numpy as np
 import numpy.linalg as LA
-import h5py
 
+from .helpers_misc import read_cutout
 from .settings import h0, illustris_snap2z, tng_snap2z
 
 __all__ = ['get_shape_main']
@@ -127,11 +127,9 @@ def get_shape_main(source_dir, fname):
     with open('%s/info.dat'%source_dir, 'rb') as f:
         info = pickle.load(f)
     pos = np.array(info['SubhaloPos']) / (1 + z) / h0
-
-    with h5py.File('%s/%s' % (source_dir, fname), 'r') as f:
-        xpart_star = f['star_coords'] - pos
-
-    Rstar = np.arange(1, 101, 1)
+    # read in the coorinates
+    xpart_star = read_cutout(fname='%s/%s' % (source_dir, fname), z=z) - pos
+    # calculate stuff
     axis_ratios_star, evectors_star = shape(Rstar, xpart_star)
     # set up and save data
     rst = {'Rstar': Rstar,

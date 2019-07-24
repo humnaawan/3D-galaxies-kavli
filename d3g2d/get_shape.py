@@ -173,8 +173,8 @@ def get_shape_class(data_dir, startwith_tag='TNG', Rdecider=100):
             raise ValueError('Somethings wrong.')
 
     filename = 'shape%s_classes_%shaloIds.pickle' % (Rdecider, len(haloIds) )
-    rst = {'haloId': haloIds,
-           'shape': shapes
+    rst = {'haloId': np.array( haloIds ),
+           'shape': np.array( shapes )
            }
     with open('%s/%s' % (data_dir, filename), 'wb') as f:
         pickle.dump(rst, f)

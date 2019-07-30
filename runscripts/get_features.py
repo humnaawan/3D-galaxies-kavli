@@ -16,15 +16,15 @@ parser.add_option('--shape_datapath', dest='shape_datapath',
                   help='Path to the folder with the shape data.')
 parser.add_option('--outdir', dest='outdir',
                   help='Path to the folder where to save results.')
-parser.add_option('--q',
-                  action='store_false', dest='quiet', default=False,
-                  help='No print statements.')
+parser.add_option('--low_res',
+                  action='store_true', dest='low_res', default=False,
+                  help='Treat data as low resolution data.')
 # ------------------------------------------------------------------------------
 (options, args) = parser.parse_args()
 summary_datapath = options.summary_datapath
 shape_datapath = options.shape_datapath
 outdir = options.outdir
-quiet = options.quiet
+low_res = options.low_res
 # ------------------------------------------------------------------------------
 start_time = time.time()
 readme_tag = ''
@@ -39,7 +39,46 @@ os.makedirs(fig_dir, exist_ok=True)
 # start things up
 start_time = time.time()
 # ------------------------------------------------------------------------------
-def get_features(data_for_halo):
+def get_features_highres(data_for_halo):
+
+    features = {}
+    for key in ['aper_ba']:
+        features[key] = data_for_halo[key]
+
+    for pair in [[7, 9], [9, 11], [11, 13], [13, 14], [14, 15]]:
+        ind_inner, ind_outer = pair
+        inner_r = data_for_halo['aper_rkpc'][ind_inner]
+        outer_r = data_for_halo['aper_rkpc'][ind_outer]
+        M_in = 10 ** data_for_halo['aper_logms'][ind_inner]
+        M_out = 10 ** data_for_halo['aper_logms'][ind_outer]
+        features['delM_%s_%s' % (inner_r, outer_r)] = (M_out - M_in) / M_out
+
+    for pair in [[17, 21], [21, 24], [24, 28], [28, 30], [30, 32]]:
+        ind_inner, ind_outer = pair
+        inner, outer = data_for_halo['rkpc_shape'][ind_inner], data_for_halo['rkpc_shape'][ind_outer]
+
+        e_in =  data_for_halo['e_shape'][ind_inner]
+        e_out = data_for_halo['e_shape'][ind_outer]
+
+        features['dele_%.f_%.f' % (inner, outer)] = e_out - e_in
+
+        pa_in =  data_for_halo['pa_shape'][ind_inner]
+        pa_out = data_for_halo['pa_shape'][ind_outer]
+        del_pa = pa_out - pa_in
+        if del_pa > 45: del_pa -= 45
+        if del_pa < -45: del_pa += 45
+
+        features['delpa_%.f_%.f' % (inner, outer)] = del_pa
+    # add ellipticity close to 100kpc
+    ind = 29
+    rval = data_for_halo['rkpc_shape'][ind]
+    features['e_%.f' % rval] = data_for_halo['e_shape'][ind]
+    # add logm100
+    features['logm100'] = data_for_halo['aper_logms'][-2]
+
+    return features
+# ------------------------------------------------------------------------------
+def get_features_lowres(data_for_halo):
 
     features = {}
     for key in ['aper_ba']:
@@ -98,7 +137,10 @@ for i, haloId in enumerate(shape_data['haloId']):
     else:
         filename = filename[0]
     data = np.load('%s/%s' % (summary_datapath, filename))
-    out = get_features(data_for_halo=data)
+    if low_res:
+        out = get_features_lowres(data_for_halo=data)
+    else:
+        out = get_features_highres(data_for_halo=data)
     if i == 0:
         keys = out.keys()
         feats = list(out.values())
@@ -112,11 +154,19 @@ for i, haloId in enumerate(shape_data['haloId']):
         # ----------------------------------------------------------------------
         # plot the mass porfiles
         plt.clf()
-        plt.plot(data['rpix_shape'] * 5.333, data['mu_shape'], 'o-', label='mu_shape')
-        plt.plot(data['aper_rkpc'], 10 ** data['aper_logms'], 'o-', label='aper_logms')
-        plt.plot(data['rpix_shape'] * 5.333, data['maper_shape'], 'o-', label='maper_shape')
-        plt.plot(data['rpix_prof'] * 5.333, data['maper_prof'], 'x-', label='maper_prof')
-        plt.plot(data['rpix_prof'] * 5.333, data['mu_prof'], 'x-', label='mu_prof')
+        if low_res:
+            plt.plot(data['rpix_shape'] * 5.333, data['mu_shape'], 'o-', label='mu_shape')
+            plt.plot(data['aper_rkpc'], 10 ** data['aper_logms'], 'o-', label='aper_logms')
+            plt.plot(data['rpix_shape'] * 5.333, data['maper_shape'], 'o-', label='maper_shape')
+            plt.plot(data['rpix_prof'] * 5.333, data['maper_prof'], 'x-', label='maper_prof')
+            plt.plot(data['rpix_prof'] * 5.333, data['mu_prof'], 'x-', label='mu_prof')
+        else:
+            plt.plot(data['rkpc_shape'], data['mu_shape'], 'o-', label='mu_shape')
+            plt.plot(data['aper_rkpc'], 10 ** data['aper_logms'], 'o-', label='aper_logms')
+            plt.plot(data['rkpc_shape'], data['maper_shape'], 'o-', label='maper_shape')
+            plt.plot(data['rkpc_prof'], data['maper_prof'], 'x-', label='maper_prof')
+            plt.plot(data['rkpc_prof'], data['mu_prof'], 'x-', label='mu_prof')
+
         # plot details
         plt.legend(bbox_to_anchor=(1,1))
         plt.xlabel('kpc')
@@ -160,7 +210,10 @@ for i, haloId in enumerate(shape_data['haloId']):
     # add to the right counter
     counters[shape_class] += 1
     # plot
-    plt.plot(( data['rpix_prof'] * 5.333), np.log10(data['mu_prof']), '.-', alpha=0.3, color=colors[shape_class])
+    if low_res:
+        plt.plot( data['rpix_prof'] * 5.333, np.log10(data['mu_prof']), '.-', alpha=0.3, color=colors[shape_class])
+    else:
+        plt.plot( data['rkpc_prof'], np.log10(data['mu_prof']), '.-', alpha=0.3, color=colors[shape_class])
 # plot details
 plt.xlabel('R (kpc)' )
 plt.ylabel(r'log10($\mu_{prof}$) ')
@@ -203,7 +256,10 @@ for i, haloId in enumerate(shape_data['haloId']):
     # add to the right counter
     counters[shape_class] += 1
     # plot; all masses
-    axes[0].plot(( data['rpix_prof'] * 5.333), np.log10(data['mu_prof']), '.-', alpha=0.3, color=colors[shape_class])
+    if low_res:
+        axes[0].plot( data['rpix_prof'] * 5.333, np.log10(data['mu_prof']), '.-', alpha=0.3, color=colors[shape_class])
+    else:
+        axes[0].plot( data['rkpc_prof'], np.log10(data['mu_prof']), '.-', alpha=0.3, color=colors[shape_class])
 
     # now determine where the logM100 of this galaxies lies in the overall distribution.
     # consider each quartile separately
@@ -224,8 +280,12 @@ for i, haloId in enumerate(shape_data['haloId']):
         axis_ind = 4
         counter_4 += 1
     # now plot
-    axes[axis_ind].plot(( data['rpix_prof'] * 5.333), np.log10(data['mu_prof']), '.-',
-                        alpha=0.3, color=colors[shape_class])
+    if low_res:
+        axes[axis_ind].plot( data['rpix_prof'] * 5.333, np.log10(data['mu_prof']), '.-',
+                            alpha=0.3, color=colors[shape_class])
+    else:
+        axes[axis_ind].plot( data['rkpc_prof'], np.log10(data['mu_prof']), '.-',
+                            alpha=0.3, color=colors[shape_class])
 # plot details
 fig.set_size_inches(15, 15)
 axes[4].set_xlabel('R (kpc)' )
@@ -295,4 +355,3 @@ readme.update(to_write='Saved %s\n' % filename)
 
 # ----------------------------------------------------------------------
 readme.update(to_write='## Time taken: %s\n'%get_time_passed(start_time))
-if not quiet: print(update)

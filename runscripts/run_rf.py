@@ -27,6 +27,9 @@ parser.add_option('--m100',
 parser.add_option('--m200',
                   action='store_true', dest='m200', default=False,
                   help='Include m200 in features.')
+parser.add_option('--prolate_vs_not',
+                  action='store_true', dest='prolate_vs_not', default=False,
+                  help='Consider only two classes.')
 # ------------------------------------------------------------------------------
 (options, args) = parser.parse_args()
 features_file = options.features_file
@@ -36,6 +39,9 @@ quiet = options.quiet
 regress = options.regress
 m100 = options.m100
 m200 = options.m200
+prolate_vs_not = options.prolate_vs_not
+if prolate_vs_not and regress:
+    raise ValueError('prolate_vs_not tag is not valid for regression.')
 # ------------------------------------------------------------------------------
 start_time = time.time()
 # make the outdir if it doesn't exist
@@ -93,6 +99,8 @@ else:
     shape_data = pd.DataFrame({ 'shape': np.array( shape['shape'] ) } )
     # combine spherical vs triaxial
     shape_data['shape'][ shape_data['shape'] == 'S' ] = 'T'
+    if prolate_vs_not:
+        shape_data['shape'][ shape_data['shape'] != 'P' ] = 'Not-P'
 
 # update
 update = '## Running analysis with %s features:\n%s\n' % ( len(feats.keys()), feats.keys() )

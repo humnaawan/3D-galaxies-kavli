@@ -39,6 +39,12 @@ parser.add_option('--combine_projs',
                   features_file should now be just name of csv file to look for.')
 parser.add_option('--features_path', dest='features_path',
                   help='Path to the folder with the summary data for different projections.')
+parser.add_option('--no_2nd_order_feats',
+                  action='store_true', dest='no_2nd_order_feats', default=False,
+                  help='Drop the 2nd-order features.')
+parser.add_option('--good_radius_feats',
+                  action='store_true', dest='good_radius_feats', default=False,
+                  help='Drop any features for below 10kpc and above 100kpc.')
 # ------------------------------------------------------------------------------
 (options, args) = parser.parse_args()
 features_file = options.features_file
@@ -58,6 +64,8 @@ combine_projs = options.combine_projs
 if combine_projs and features_file.__contains__('/'):
     raise ValueError('features_file must be just the name of csv file when combine_projs is used; not a path.')
 features_path = options.features_path
+no_2nd_order_feats = options.no_2nd_order_feats
+good_radius_feats = options.good_radius_feats
 # ------------------------------------------------------------------------------
 start_time = time.time()
 # make the outdir if it doesn't exist
@@ -129,11 +137,16 @@ if combine_projs:
 else:
     feats = pd.read_csv(features_file)
 
-if not m100:
+if not m100 and 'logm100' in feats.keys():
     _ = feats.pop('logm100')
-if not m200 and not high_res:
+if not m200 and 'logm200' in feats.keys():
     _ = feats.pop('logm200')
-
+if no_2nd_order_feats:
+    for key in [f for f in feats.keys() if f.startswith('a1') or f.start_time('a4') ]:
+        _ = feats.pop(key)
+if good_radius_feats:
+    for key in ['delM_107_150', 'dele_111_160', 'delpa_111_160']:
+        _ = feats.pop(key)
 # update
 update = '## Running analysis with %s features:\n%s\n' % ( len(feats.keys()), feats.keys() )
 update += '## For %s targets:\n%s\n' % ( len(shape_data.keys()), shape_data.keys() )

@@ -137,6 +137,10 @@ def inverse_onehot(encoder, y_test, y_pred):
     return y_test, y_pred
 # ------------------------------------------------------------------------------
 def get_mse(test_arr, pred_arr):
+    if len(np.shape(test_arr)) == 1:
+        test_arr = np.reshape(test_arr, ( len(test_arr), 1) )
+    if len(np.shape(pred_arr)) == 1:
+        pred_arr = np.reshape(pred_arr, ( len(pred_arr), 1) )
     target_dim = np.size(test_arr, axis=1)
 
     if (target_dim > 1):
@@ -173,16 +177,19 @@ def evaluate_model(model, x_arr, y_arr, save_plot, feat_labels, target_labels,
     # plot more test; need to invert one hot encoding
     if regression:
         for i in range(np.shape(y_pred)[-1]):
+            plt.clf()
             plt.plot(y_arr[:, i], y_pred[:, i], 'o')
             plt.plot(y_arr[:, i], y_arr[:, i], '-')
             plt.xlabel('true')
             plt.ylabel('predicted')
-            plt.title(target_labels[i])
+            plt.title('%s ; mse %.2e' % ( target_labels[i],
+                                         get_mse(test_arr=y_arr[:, i], pred_arr=y_pred[:, i])[0] ) )
             if save_plot:
                 if i == 0:
                     if data_label != '': data_label = '_%s' % data_label
                 # set up filename
-                filename = 'plot_scatter_%s%s.png' % (target_labels[i].replace('/', ''), data_label)
+                label = target_labels[i].replace('/', '').replace('_', '')
+                filename = 'plot_scatter_%s%s.png' % (label, data_label)
                 # save file
                 plt.savefig('%s/%s'%(outdir, filename), format='png',
                             bbox_inches='tight')

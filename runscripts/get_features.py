@@ -69,6 +69,10 @@ def get_features_highres(data_for_halo):
         if del_pa < -45: del_pa += 45
 
         features['delpa_%.f_%.f' % (inner, outer)] = del_pa
+
+    for ind in [17, 21, 24, 28, 29]:
+        features['a1_%.f' % (data_for_halo['rkpc_shape'][ind])] = data_for_halo['a1_shape'][ind]
+        features['a4_%.f' % (data_for_halo['rkpc_shape'][ind])] = data_for_halo['a4_shape'][ind]
     # add ellipticity close to 100kpc
     ind = 29
     rval = data_for_halo['rkpc_shape'][ind]

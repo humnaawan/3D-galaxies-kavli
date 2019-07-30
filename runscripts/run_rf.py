@@ -30,6 +30,9 @@ parser.add_option('--m200',
 parser.add_option('--prolate_vs_not',
                   action='store_true', dest='prolate_vs_not', default=False,
                   help='Consider only two classes.')
+parser.add_option('--high_res',
+                  action='store_true', dest='high_res', default=False,
+                  help='Treat data as high resolution data.')
 # ------------------------------------------------------------------------------
 (options, args) = parser.parse_args()
 features_file = options.features_file
@@ -42,6 +45,9 @@ m200 = options.m200
 prolate_vs_not = options.prolate_vs_not
 if prolate_vs_not and regress:
     raise ValueError('prolate_vs_not tag is not valid for regression.')
+high_res = options.high_res
+if high_res and m200:
+    raise ValueError('Dont have logm200 for high res data.')
 # ------------------------------------------------------------------------------
 start_time = time.time()
 # make the outdir if it doesn't exist
@@ -54,13 +60,15 @@ update += 'Options:\n%s\n' % options
 readme = readme_obj(outdir=outdir, readme_tag=readme_tag, first_update=update)
 readme.run()
 
+if high_res and m100:
+    readme.update(to_write='\n## m100 is not exactly m100.')
 # start things up
 start_time = time.time()
 # read in the features
 feats = pd.read_csv(features_file)
 if not m100:
     _ = feats.pop('logm100')
-if not m200:
+if not m200 and not high_res:
     _ = feats.pop('logm200')
 
 # ------------------------------------------------------------------------------

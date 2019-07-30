@@ -21,16 +21,15 @@ def run_rf(feats, feat_labels, targets, target_labels, outdir,
     # ----------------------------------------------------------------------
     if not regression:
         target_labels = np.unique( targets )
-        if ( len( np.unique( targets) ) > 2 ):
-            # employ one-hot encoding
-            # ----------------------------------------------------------------------
-            update = 'Running one-hot encoding since have %s targets classes' % len( np.unique( targets) )
-            if readme is not None:
-                readme.update(to_write=update)
-            # ----------------------------------------------------------------------
-            encoder = OneHotEncoder(handle_unknown='ignore')
-            encoder.fit(targets)
-            targets = pd.DataFrame(encoder.transform(targets).toarray(), columns=encoder.categories_ ).values
+        # employ one-hot encoding
+        # ----------------------------------------------------------------------
+        update = 'Running one-hot encoding; have %s targets classes' % len( np.unique( targets) )
+        if readme is not None:
+            readme.update(to_write=update)
+        # ----------------------------------------------------------------------
+        encoder = OneHotEncoder(handle_unknown='ignore')
+        encoder.fit(targets)
+        targets = pd.DataFrame(encoder.transform(targets).toarray(), columns=encoder.categories_ ).values
     else:
         encoder = None
     # --------------------------------------------------------------------------

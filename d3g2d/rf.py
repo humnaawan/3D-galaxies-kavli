@@ -14,7 +14,7 @@ from .helpers_plot import plot_confusion_matrix
 from .settings import rcparams
 for key in rcparams: mpl.rcParams[key] = rcparams[key]
 
-__all__ = ['run_rf', 'inverse_onehot', 'get_mse', 'evaluate_model']
+__all__ = ['run_rf', 'inverse_onehot', 'get_chisq', 'get_mse', 'evaluate_model']
 
 def run_rf(feats, feat_labels, targets, target_labels, outdir,
            regression=False, readme=None):
@@ -135,6 +135,14 @@ def inverse_onehot(encoder, y_test, y_pred):
     y_pred = encoder.inverse_transform(y_pred)
     return y_test, y_pred
 # ------------------------------------------------------------------------------
+def get_chisq(true_arr, model_arr):
+    true_arr, model_arr = np.array(true_arr), np.array(model_arr)
+    # need to have len(true)==len(model)
+    if len(true_arr) != len(model_arr):
+        raise ValueError('true_arr and model_arr must be of the same length.')
+    # calculate the statistic and return it
+    return np.sum( ( true_arr - model_arr ) **2 / true_arr ) / len(true_arr)
+# ------------------------------------------------------------------------------
 def get_mse(test_arr, pred_arr):
     if len(np.shape(test_arr)) == 1:
         test_arr = np.reshape(test_arr, ( len(test_arr), 1) )
@@ -181,8 +189,8 @@ def evaluate_model(model, x_arr, y_arr, save_plot, feat_labels, target_labels,
             plt.plot(y_arr[:, i], y_arr[:, i], '-')
             plt.xlabel('true')
             plt.ylabel('predicted')
-            plt.title('%s ; mse %.2e' % ( target_labels[i],
-                                         get_mse(test_arr=y_arr[:, i], pred_arr=y_pred[:, i])[0] ) )
+            plt.title(r'%s ; $\chi^2$/dof = %.2e' % ( target_labels[i],
+                                              get_chisq(true_arr=y_arr[:, i], model_arr=y_pred[:, i]) ) )
             if save_plot:
                 if i == 0:
                     if data_label != '': data_label = '_%s' % data_label

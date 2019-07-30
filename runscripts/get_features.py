@@ -70,11 +70,14 @@ def get_features(data_for_halo):
         if del_pa < -45: del_pa += 45
 
         features['delpa_%.f_%.f' % (inner, outer)] = del_pa
-
-    # store logm100
+    # add ellipticity close to 100kpc
+    ind = 20
+    rval = data_for_halo['rpix_shape'][ind] * 5.333
+    features['e_%.f' % rval] = data_for_halo['e_shape'][ind]
+    # add logm100
     ind = np.where( data_for_halo['aper_rkpc'] == 100 )[0]
     features['logm100'] = data_for_halo['aper_logms'][ind][0]
-
+    # add logm200
     ind = np.where( data_for_halo['aper_rkpc'] == 200 )[0]
     features['logm200'] = data_for_halo['aper_logms'][ind][0]
 

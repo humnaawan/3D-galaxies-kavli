@@ -183,29 +183,41 @@ def evaluate_model(model, x_arr, y_arr, save_plot, feat_labels, target_labels,
         readme.update(to_write=update)
     # plot more test; need to invert one hot encoding
     if regression:
-        for i in range(np.shape(y_pred)[-1]):
-            plt.clf()
-            plt.plot(y_arr[:, i], y_pred[:, i], 'o')
-            plt.plot(y_arr[:, i], y_arr[:, i], '-')
-            plt.xlabel('true')
-            plt.ylabel('predicted')
-            plt.title(r'%s ; $\chi^2$/dof = %.2e' % ( target_labels[i],
-                                              get_chisq(true_arr=y_arr[:, i], model_arr=y_pred[:, i]) ) )
-            if save_plot:
-                if i == 0:
-                    if data_label != '': data_label = '_%s' % data_label
-                # set up filename
+        ntargets = np.shape(y_pred)[-1]
+        label = ''
+        plt.clf()
+        nrows, ncols = ntargets, 1
+        fig, axes = plt.subplots(nrows, ncols)
+        plt.subplots_adjust(wspace=0.3, hspace=0.3, top=0.9)
+
+        for i in range(ntargets):
+            axes[i].plot(y_arr[:, i], y_pred[:, i], 'o')
+            axes[i].plot(y_arr[:, i], y_arr[:, i], '-')
+            axes[i].set_title(r'%s ; $\chi^2$/dof = %.2e' % ( target_labels[i],
+                                                             get_chisq(true_arr=y_arr[:, i], model_arr=y_pred[:, i]) ) )
+            if i == 0:
                 label = target_labels[i].replace('/', '').replace('_', '')
-                filename = 'plot_scatter_%s%s.png' % (label, data_label)
-                # save file
-                plt.savefig('%s/%s'%(outdir, filename), format='png',
-                            bbox_inches='tight')
-                plt.close('all')
-                update = 'Saved %s' % filename
-                if readme is not None:
-                    readme.update(to_write=update)
             else:
-                plt.show()
+                label += '_%s' % target_labels[i].replace('/', '').replace('_', '')
+        fig.set_size_inches(ntargets * 5, ntargets * 5)
+        plt.suptitle(data_label, fontweight="bold", y=0.95)
+        axes[-1].set_xlabel('true' )
+        for row in range( nrows ):
+            axes[row].set_ylabel('predicted')
+
+        if save_plot:
+            if data_label != '': data_label = '_%s' % data_label
+            # set up filename
+            filename = 'plot_scatter_%s%s.png' % (label, data_label)
+            # save file
+            plt.savefig('%s/%s'%(outdir, filename), format='png',
+                        bbox_inches='tight')
+            plt.close('all')
+            update = 'Saved %s' % filename
+            if readme is not None:
+                readme.update(to_write=update)
+        else:
+            plt.show()
     else:
         if encoder is not None:
             y_arr_, y_pred_ = inverse_onehot(encoder=encoder, y_test=y_arr, y_pred=y_pred)

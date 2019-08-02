@@ -80,6 +80,9 @@ def get_features_highres(data_for_halo):
     # add logm100
     features['logm100'] = data_for_halo['aper_logms'][-2]
 
+    features['logm'] = data_for_halo['logms']
+    features['logm30'] = data_for_halo['aper_logms'][-6]
+
     return features
 # ------------------------------------------------------------------------------
 def get_features_lowres(data_for_halo):
@@ -330,32 +333,34 @@ plt.close('all')
 readme.update(to_write='Saved %s\n' % filename)
 # ----------------------------------------------------------------------
 # plot the analog of Hongyu's Fig 3.
-m_arr = np.arange( min(logm100s) - 0.1, max(logm100s) + 0.2, 0.1 )
-# plot normed densities
-ind1 = np.where( shape_data['shape'] == 'P' )[0]
-plt.hist(logm100s[ind1], histtype='step', lw=2, bins=m_arr, color='r',
-         label='P normed density (N=%s)' % len(ind1), density=True )
-ind2 = np.where( shape_data['shape'] != 'P')[0]
-plt.hist(logm100s[ind2], histtype='step', bins=m_arr, color='b',
-         lw=2, label='Not-P normed density (N=%s)' % len(ind2), density=True )
-# plot fraction
-frac, ms = [], []
-m_arr = np.arange( min(logm100s), max(logm100s) + 0.2, 0.2 )
-for j in range(len(m_arr) - 1):
-    mlow, mupp = m_arr[j], m_arr[j+1]
-    ind = np.where( ( logm100s >= mlow ) & ( logm100s < mupp ))[0]
-    frac.append( len( set(ind1) & set(ind) ) / len( ind) )
-    ms.append( np.median( [mlow, mupp ]) )
-plt.plot(ms, frac, 'k.-', label='Prolate Fraction')
-# details
-plt.legend()
-plt.xlabel( 'logM100' )
-# save plot
-filename = 'hongyu_analog_%sgals.png' % (i+1)
-plt.savefig('%s/%s'%(fig_dir, filename), format='png',
-            bbox_inches='tight')
-plt.close('all')
-readme.update(to_write='Saved %s\n' % filename)
+for key in ['logm100', 'logm', 'logm30']:
+    logmass = feats[key].values
+    m_arr = np.arange( min(logmass) - 0.1, max(logmass) + 0.15, 0.05 )
+    # plot normed densities
+    ind1 = np.where( shape_data['shape'] == 'P' )[0]
+    plt.hist(logmass[ind1], histtype='step', lw=2, bins=m_arr, color='r',
+             label='P normed density (N=%s)' % len(ind1), density=True )
+    ind2 = np.where( shape_data['shape'] != 'P')[0]
+    plt.hist(logmass[ind2], histtype='step', bins=m_arr, color='b',
+             lw=2, label='Not-P normed density (N=%s)' % len(ind2), density=True )
+    # plot fraction
+    frac, ms = [], []
+    m_arr = np.arange( min(logmass), max(logmass) + 0.2, 0.2 )
+    for j in range(len(m_arr) - 1):
+        mlow, mupp = m_arr[j], m_arr[j+1]
+        ind = np.where( ( logmass >= mlow ) & ( logmass < mupp ))[0]
+        frac.append( len( set(ind1) & set(ind) ) / len( ind) )
+        ms.append( np.median( [mlow, mupp ]) )
+    plt.plot(ms, frac, 'k.-', label='Prolate Fraction')
+    # details
+    plt.legend()
+    plt.xlabel( key )
+    # save plot
+    filename = 'hongyu_analog_%sgals_%s.png' % (i+1, key)
+    plt.savefig('%s/%s'%(fig_dir, filename), format='png',
+                bbox_inches='tight')
+    plt.close('all')
+    readme.update(to_write='Saved %s\n' % filename)
 
 # ----------------------------------------------------------------------
 readme.update(to_write='## Time taken: %s\n'%get_time_passed(start_time))

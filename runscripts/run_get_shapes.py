@@ -45,11 +45,11 @@ if test or illustris:
             haloIDs.append( int( f.split('halo')[1].split('_z')[0] ) )
         haloIDs = haloIDs
 else:
-    haloIDs = []
-    for f in [f for f in os.listdir(summary_datapath)]:
-        haloIDs.append( int(f.split('_')[1]) )
     z = tng_snap2z['z']
     sim_name = 'TNG100-1'
+    haloIDs = []
+    for f in [f for f in os.listdir(summary_datapath) if f.startswith( sim_name ) ]:
+        haloIDs.append( int(f.split('_')[1]) )
     Rstar = np.arange(20, 160, 10)
 shape_tag = 'shape_%sRvals' % len( Rstar )
 readme.update(to_write='Working with %s galaxies for %s' % ( len(haloIDs), sim_name))

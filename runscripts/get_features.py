@@ -366,8 +366,8 @@ for key in ['logm100', 'logm', 'logm30']:
                     Line2D([0], [0], color='b', lw=2),
                     Line2D([0], [0], color='k', lw=2)]
     plt.legend(custom_lines,
-               ['P normed density (N=%s)' % len(ind1),
-                'Not-P normed density (N=%s)' % len(ind2),
+               ['Prolate normed density (N=%s)' % len(ind1),
+                'Not-Prolate normed density (N=%s)' % len(ind2),
                 'Prolate Fraction'],
                bbox_to_anchor=(1.6,1), frameon=True)
     # save plot

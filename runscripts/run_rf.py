@@ -160,11 +160,13 @@ if not m200 and 'logm200' in feats.keys():
     _ = feats.pop('logm200')
 
 if no_2nd_order_feats:
-    for key in [f for f in feats.keys() if f.startswith('a1') or f.start_time('a4') ]:
-        _ = feats.pop(key)
+    for key in [f for f in feats.keys() if f.startswith('a1') or f.startswith('a4') ]:
+        if key in feats:
+            _ = feats.pop(key)
 if good_radius_feats:
     for key in ['delM_107_150', 'dele_111_160', 'delpa_111_160']:
-        _ = feats.pop(key)
+        if key in feats:
+            _ = feats.pop(key)
 # update
 update = '## Running analysis with %s features:\n%s\n' % ( len(feats.keys()), feats.keys() )
 update += '## For %s targets:\n%s\n' % ( len(shape_data.keys()), shape_data.keys() )

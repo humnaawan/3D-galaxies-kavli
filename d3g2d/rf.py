@@ -183,7 +183,12 @@ def evaluate_model(model, x_arr, y_arr, save_plot, feat_labels, target_labels,
         readme.update(to_write=update)
     # plot more test; need to invert one hot encoding
     if regression:
+        if len( np.shape(y_pred) ) == 1:
+            y_pred = np.reshape( y_pred, (len(y_pred) , 1)  )
+        if len( np.shape(y_arr) ) == 1:
+            y_arr = np.reshape( y_arr, (len(y_arr), 1)  )
         ntargets = np.shape(y_pred)[-1]
+
         label = ''
         plt.clf()
         nrows, ncols = ntargets, 1
@@ -191,19 +196,27 @@ def evaluate_model(model, x_arr, y_arr, save_plot, feat_labels, target_labels,
         plt.subplots_adjust(wspace=0.3, hspace=0.3, top=0.9)
 
         for i in range(ntargets):
-            axes[i].plot(y_arr[:, i], y_pred[:, i], 'o')
-            axes[i].plot(y_arr[:, i], y_arr[:, i], '-')
-            axes[i].set_title(r'%s ; $\chi^2$/dof = %.2e' % ( target_labels[i],
-                                                             get_chisq(true_arr=y_arr[:, i], model_arr=y_pred[:, i]) ) )
+            if ntargets == 1: ax = axes
+            else: ax = axes[i]
+            ax.plot(y_arr[:, i], y_pred[:, i], 'o')
+            ax.plot(y_arr[:, i], y_arr[:, i], '-')
+            ax.set_title(r'%s ; $\chi^2$/dof = %.2e' % ( target_labels[i],
+                                                        get_chisq(true_arr=y_arr[:, i], model_arr=y_pred[:, i]) ) )
             if i == 0:
                 label = target_labels[i].replace('/', '').replace('_', '')
             else:
                 label += '_%s' % target_labels[i].replace('/', '').replace('_', '')
         fig.set_size_inches(ntargets * 5, ntargets * 5)
-        plt.suptitle(data_label, fontweight="bold", y=0.95)
-        axes[-1].set_xlabel('true' )
-        for row in range( nrows ):
-            axes[row].set_ylabel('predicted')
+
+        if ntargets == 1:
+            plt.suptitle(data_label, fontweight="bold", y=1.05)
+            axes.set_xlabel('true' )
+            axes.set_ylabel('predicted')
+        else:
+            plt.suptitle(data_label, fontweight="bold", y=0.95)
+            axes[-1].set_xlabel('true' )
+            for row in range( nrows ):
+                axes[row].set_ylabel('predicted')
 
         if save_plot:
             if data_label != '': data_label = '_%s' % data_label

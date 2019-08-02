@@ -53,7 +53,7 @@ def get_features_highres(data_for_halo):
         M_out = 10 ** data_for_halo['aper_logms'][ind_outer]
         features['delM_%.f_%.f' % (inner_r, outer_r)] = (M_out - M_in) / M_out
 
-    for pair in [[17, 21], [21, 24], [24, 28], [28, 30], [30, 32]]:
+    for pair in [[17, 21], [21, 24], [24, 28], [28, 30]]:
         ind_inner, ind_outer = pair
         inner, outer = data_for_halo['rkpc_shape'][ind_inner], data_for_halo['rkpc_shape'][ind_outer]
 

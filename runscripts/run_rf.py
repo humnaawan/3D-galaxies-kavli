@@ -52,6 +52,9 @@ parser.add_option('--good_radius_feats',
 parser.add_option('--plot_feature_dists',
                   action='store_true', dest='plot_feature_dists', default=False,
                   help='Plot distribution for the features.')
+parser.add_option('--just_triaxiality',
+                  action='store_true', dest='just_triaxiality', default=False,
+                  help='Using only triaxiality; only valid for regression.')
 # ------------------------------------------------------------------------------
 (options, args) = parser.parse_args()
 features_file = options.features_file
@@ -76,8 +79,11 @@ good_radius_feats = options.good_radius_feats
 plot_feature_dists = options.plot_feature_dists
 if plot_feature_dists and regress:
     raise ValueError('plot_feature_dists tag is not valid for regression.')
+just_triaxiality = options.just_triaxiality
+if just_triaxiality and not regress:
+    raise ValueError('just_triaxiality tag is only valid for regression.')
 # ------------------------------------------------------------------------------
-start_time = time.time()
+start_time0 = time.time()
 # make the outdir if it doesn't exist
 os.makedirs(outdir, exist_ok=True)
 #
@@ -92,7 +98,6 @@ if high_res and m100:
     readme.update(to_write='\n## m100 is not exactly m100.')
 # start things up
 start_time = time.time()
-
 # ------------------------------------------------------------------------------
 # read in shape data
 if regress:
@@ -110,12 +115,14 @@ if regress:
         # find value specified rstar
         ind = np.where( data_now['Rstar'] == Rstar )[0]
         if i == 0:
-            shape_data['b/a_%s' % Rstar] = [ data_now['b/a'][ind] ]
-            shape_data['c/a_%s' % Rstar] = [ data_now['c/a'][ind] ]
+            if not just_triaxiality:
+                shape_data['b/a_%s' % Rstar] = [ data_now['b/a'][ind] ]
+                shape_data['c/a_%s' % Rstar] = [ data_now['c/a'][ind] ]
             shape_data['T_%s' % Rstar] = [ data_now['T'][ind] ]
         else:
-            shape_data['b/a_%s' % Rstar] += [ data_now['b/a'][ind] ]
-            shape_data['c/a_%s' % Rstar] += [ data_now['c/a'][ind] ]
+            if not just_triaxiality:
+                shape_data['b/a_%s' % Rstar] += [ data_now['b/a'][ind] ]
+                shape_data['c/a_%s' % Rstar] += [ data_now['c/a'][ind] ]
             shape_data['T_%s' % Rstar] += [ data_now['T'][ind] ]
     for key in shape_data:
         shape_data[key] = np.array(shape_data[key]).flatten()
@@ -129,10 +136,12 @@ else:
     shape_data['shape'][ shape_data['shape'] == 'S' ] = 'T'
     if prolate_vs_not:
         shape_data['shape'][ shape_data['shape'] != 'P' ] = 'Not-P'
+
 # ------------------------------------------------------------------------------
 # read in the features
 if combine_projs:
-    for i, proj_tag in enumerate( ['xy', 'xz', 'yz'] ):
+    if plot_feature_dists: feats_proj = {}
+    for i, proj_tag in enumerate( ['xy', 'yz'] ):
         readme.update(to_write='Reading in %s features ... ' % proj_tag)
         if i == 0:
             feats_here = pd.read_csv('%s/%s/%s' % (features_path, proj_tag, features_file) )
@@ -251,7 +260,9 @@ if plot_feature_dists:
 run_rf(feats=feats.values, feat_labels=feats.keys(),
        targets=shape_data.values, target_labels=shape_data.keys(),
        outdir=outdir, regression=regress, readme=readme)
-
 update = '\n## Time taken: %s'%get_time_passed(start_time)
 readme.update(to_write=update)
 if not quiet: print(update)
+
+update = 'Done.\n## Time taken: %s\n'%get_time_passed(start_time0)
+readme.update(to_write=update)

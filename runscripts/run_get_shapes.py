@@ -13,11 +13,15 @@ parser.add_option('--q',
 parser.add_option('--test',
                   action='store_true', dest='test', default=False,
                   help="Test against Hongys's output.")
+parser.add_option('--illustris',
+                  action='store_true', dest='illustris', default=False,
+                  help="Use the stellar mass data.")
 # ------------------------------------------------------------------------------
 (options, args) = parser.parse_args()
 data_dir = options.data_dir
 quiet = options.quiet
 test = options.test
+illustris = options.illustris
 # ------------------------------------------------------------------------------
 start_time = time.time()
 readme_tag = ''
@@ -28,11 +32,18 @@ update += '\nOptions:\n%s\n' % options
 readme = readme_obj(outdir=data_dir, readme_tag=readme_tag, first_update=update)
 readme.run()
 
-if test:
-    haloIDs = [5, 16941]
+if test or illustris:
     z = illustris_snap2z['z']
     sim_name = 'Illustris-1'
-    Rstar = np.arange(1, 101, 1)
+    if test:
+        Rstar = np.arange(1, 101, 1)
+        haloIDs = [5, 16941]
+    else:
+        Rstar = np.hstack( [ np.arange(1, 101, 1), np.arange(110, 160, 10) ])
+        haloIDs = []
+        for f in [f for f in os.listdir( data_dir ) if f.startswith( sim_name )]:
+            haloIDs.append( int( f.split('halo')[1].split('_z')[0] ) )
+        haloIDs = haloIDs
 else:
     haloIDs = []
     for f in [f for f in os.listdir(summary_datapath)]:
@@ -51,7 +62,7 @@ for haloID in haloIDs:
     if not quiet: print(update)
     filename = get_shape_main(source_dir='%s/%s_halo%s_z%s' % (data_dir, sim_name, haloID, z),
                               fname='cutout_%s.hdf5' % haloID,
-                              illustris=test, Rstar=Rstar)
+                              illustris=test or illustris, Rstar=Rstar)
     update = 'Saved %s\n' % filename
     update += '## Time taken: %s\n'%get_time_passed(start_time)
     readme.update(to_write=update)

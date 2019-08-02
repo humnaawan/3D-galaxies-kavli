@@ -40,6 +40,8 @@ else:
     z = tng_snap2z['z']
     sim_name = 'TNG100-1'
     Rstar = np.arange(20, 160, 10)
+shape_tag = 'shape_%sRvals' % len( Rstar )
+readme.update(to_write='Working with %s galaxies for %s' % ( len(haloIDs), sim_name))
 
 # run analysis to get axis ratios etc.
 for haloID in haloIDs:
@@ -56,9 +58,11 @@ for haloID in haloIDs:
     if not quiet: print(update)
 
 # now classify
+update = 'Getting shape classification ... \n'
 start_time = time.time()
-filename = get_shape_class(data_dir=data_dir, startwith_tag=sim_name, Rdecider=100)
-update = 'Saved %s\n' % filename
+filename = get_shape_class(data_dir=data_dir, startwith_tag=sim_name,
+                           shape_tag=shape_tag, Rdecider=100)
+update += 'Saved %s\n' % filename
 update += '## Time taken: %s\n'%get_time_passed(start_time)
 readme.update(to_write=update)
 if not quiet: print(update)

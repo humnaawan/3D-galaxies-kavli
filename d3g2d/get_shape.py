@@ -148,13 +148,14 @@ def get_shape_main(source_dir, fname, illustris=False, Rstar=None):
 
     return filename
 
-def get_shape_class(data_dir, startwith_tag='TNG', Rdecider=100):
+def get_shape_class(data_dir, shape_tag, startwith_tag='TNG', Rdecider=100):
     shapes, haloIds = [], []
     # loop over the local foders; each folder is for a specific halo
     for i, folder in enumerate([f for f in os.listdir(data_dir) if f.startswith(startwith_tag)]):
         # ---------------------------------------------------------------------
         # now read in the data produced from my version
-        file = [ f for f in os.listdir('%s/%s' % (data_dir, folder)) if f.startswith('shape_')]
+        file = [ f for f in os.listdir('%s/%s' % (data_dir, folder)) if f.startswith(shape_tag)]
+        haloId =  int(folder.split('halo')[-1].split('_')[0])
         if len(file) == 1:
             file = file[0]
             with open('%s/%s/%s' % (data_dir, folder, file), 'rb') as f:
@@ -170,9 +171,9 @@ def get_shape_class(data_dir, startwith_tag='TNG', Rdecider=100):
             else:
                 shapes.append('S')
             # append the id too
-            haloIds.append( int(folder.split('halo')[-1].split('_')[0]) )
+            haloIds.append( haloId )
         else:
-            raise ValueError('Somethings wrong.')
+            raise ValueError('Somethings wrong: %s for halo %s' % ( file, haloId ) )
 
     filename = 'shape%s_classes_%shaloIds.pickle' % (Rdecider, len(haloIds) )
     rst = {'haloId': np.array( haloIds ),

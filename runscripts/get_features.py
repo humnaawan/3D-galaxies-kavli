@@ -335,26 +335,41 @@ readme.update(to_write='Saved %s\n' % filename)
 # plot the analog of Hongyu's Fig 3.
 for key in ['logm100', 'logm', 'logm30']:
     logmass = feats[key].values
-    m_arr = np.arange( min(logmass) - 0.1, max(logmass) + 0.15, 0.05 )
+    m_arr = np.arange( min(logmass) - 0.1, max(logmass) + 0.1, 0.1 )
+    # set up
+    fig, ax1 = plt.subplots()
     # plot normed densities
     ind1 = np.where( shape_data['shape'] == 'P' )[0]
-    plt.hist(logmass[ind1], histtype='step', lw=2, bins=m_arr, color='r',
-             label='P normed density (N=%s)' % len(ind1), density=True )
+    ax1.hist(logmass[ind1], histtype='step', bins=m_arr, color='r',
+             lw=2, density=True )
     ind2 = np.where( shape_data['shape'] != 'P')[0]
-    plt.hist(logmass[ind2], histtype='step', bins=m_arr, color='b',
-             lw=2, label='Not-P normed density (N=%s)' % len(ind2), density=True )
+    ax1.hist(logmass[ind2], histtype='step', bins=m_arr, color='b',
+             lw=2, density=True )
+    ax1.set_xlabel( key )
+    ax1.set_ylabel( 'Normalized Number Densities' )
+    # set up the second axis
+    ax2 = ax1.twinx()
     # plot fraction
     frac, ms = [], []
-    m_arr = np.arange( min(logmass), max(logmass) + 0.2, 0.2 )
     for j in range(len(m_arr) - 1):
         mlow, mupp = m_arr[j], m_arr[j+1]
         ind = np.where( ( logmass >= mlow ) & ( logmass < mupp ))[0]
-        frac.append( len( set(ind1) & set(ind) ) / len( ind) )
-        ms.append( np.median( [mlow, mupp ]) )
-    plt.plot(ms, frac, 'k.-', label='Prolate Fraction')
+        if len(ind) > 0:
+            frac.append( len( set(ind1) & set(ind) ) / len( ind) )
+            ms.append( np.median( [mlow, mupp ]) )
+    ax2.plot(ms, frac, 'k.-', label='Prolate Fraction')
+    ax2.set_ylim(0, 1)
+    ax2.set_ylabel( 'Prolate Fraction', rotation=-90, labelpad=20)
+    ax2.grid(None)
     # details
-    plt.legend()
-    plt.xlabel( key )
+    custom_lines = [Line2D([0], [0], color='r', lw=2),
+                    Line2D([0], [0], color='b', lw=2),
+                    Line2D([0], [0], color='k', lw=2)]
+    plt.legend(custom_lines,
+               ['P normed density (N=%s)' % len(ind1),
+                'Not-P normed density (N=%s)' % len(ind2),
+                'Prolate Fraction'],
+               bbox_to_anchor=(1.6,1), frameon=True)
     # save plot
     filename = 'hongyu_analog_%sgals_%s.png' % (i+1, key)
     plt.savefig('%s/%s'%(fig_dir, filename), format='png',

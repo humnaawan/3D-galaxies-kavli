@@ -1,4 +1,5 @@
 import datetime, time, socket, os
+import numpy as np
 from d3g2d import get_shape_main, readme as readme_obj, get_time_passed
 from d3g2d import tng_snap2z, illustris_snap2z, summary_datapath, get_shape_class
 # ------------------------------------------------------------------------------
@@ -31,12 +32,14 @@ if test:
     haloIDs = [5, 16941]
     z = illustris_snap2z['z']
     sim_name = 'Illustris-1'
+    Rstar = np.arange(1, 101, 1)
 else:
     haloIDs = []
     for f in [f for f in os.listdir(summary_datapath)]:
         haloIDs.append( int(f.split('_')[1]) )
     z = tng_snap2z['z']
     sim_name = 'TNG100-1'
+    Rstar = np.arange(20, 160, 10)
 
 # run analysis to get axis ratios etc.
 for haloID in haloIDs:
@@ -46,7 +49,7 @@ for haloID in haloIDs:
     if not quiet: print(update)
     filename = get_shape_main(source_dir='%s/%s_halo%s_z%s' % (data_dir, sim_name, haloID, z),
                               fname='cutout_%s.hdf5' % haloID,
-                              test_illustris=test)
+                              illustris=test, Rstar=Rstar)
     update = 'Saved %s\n' % filename
     update += '## Time taken: %s\n'%get_time_passed(start_time)
     readme.update(to_write=update)

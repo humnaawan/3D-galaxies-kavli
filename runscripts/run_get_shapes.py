@@ -211,10 +211,11 @@ fig2.savefig('%s/%s'%(fig_dir, filename), format='png',
 plt.close(fig2)
 readme.update(to_write='Saved %s\n' % filename)
 # figure 3
-axes3[0].set_ylabel('b/a')
-axes3[1].set_ylabel('c/a')
-axes3[2].set_ylabel('T')
-axes3[2].set_xlabel('R (kpc)')
+axes3[0].set_xlabel('b/a')
+axes3[1].set_xlabel('c/a')
+axes3[2].set_xlabel('T')
+for i in range(3):
+    axes3[i].set_ylabel('Counts')
 axes3[0].legend(custom_lines,
                ['Prolate (%s)' % counter_p,
                 'Oblate (%s)' % counter_o,

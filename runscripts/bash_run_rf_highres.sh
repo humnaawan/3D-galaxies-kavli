@@ -6,7 +6,10 @@ allclasses_noa1a4=0
 twoclasses_noa1a4=0
 allclasses_wa1a4=0
 twoclasses_wa1a4=0
-regress_wT_noa1a4=1
+regress_wT_noa1a4=0
+classify_wT_noa1a4=0
+regress_wT_wa1a4=1
+classify_wT_wa1a4=1
 # ------------------------------------------------------------------------------
 # run  analysis for one projection;
 features_file='/Users/humnaawan/repos/3D-galaxies-kavli/data/tng_highres/xy/features_28.csv'
@@ -83,5 +86,44 @@ then
                     --shape_datapath=${shape_datapath} \
                     --outdir=${outdir} --high_res \
                     --no_2nd_order_feats --good_radius_feats --regress \
-                    --just_triaxiality
+                    --triaxiality_based
+fi
+# ------------------------------------------------------------------------------
+# classify based on triaxiality; no masses; no a1a4
+if [ $classify_wT_noa1a4 == 1 ];
+then
+    outdir=${base_outdir}'rf_tng_highres_we_2classes_T-based/'
+    # regression
+    python /Users/humnaawan/repos/3D-galaxies-kavli/runscripts/run_rf.py \
+                    --features_file=${features_file} \
+                    --shape_datapath=${shape_datapath} \
+                    --outdir=${outdir} --high_res \
+                    --no_2nd_order_feats --good_radius_feats \
+                    --triaxiality_based
+fi
+# ------------------------------------------------------------------------------
+# regress with triaxiality; no masses; with a1a4
+if [ $regress_wT_wa1a4 == 1 ];
+then
+    outdir=${base_outdir}'rf_tng_highres_we_3classes_Tonly_wa1a4/'
+    # regression
+    python /Users/humnaawan/repos/3D-galaxies-kavli/runscripts/run_rf.py \
+                    --features_file=${features_file} \
+                    --shape_datapath=${shape_datapath} \
+                    --outdir=${outdir} --high_res \
+                    --good_radius_feats --regress \
+                    --triaxiality_based
+fi
+# ------------------------------------------------------------------------------
+# classify based on triaxiality; no masses; with a1a4
+if [ $classify_wT_wa1a4 == 1 ];
+then
+    outdir=${base_outdir}'rf_tng_highres_we_2classes_T-based_wa1a4/'
+    # regression
+    python /Users/humnaawan/repos/3D-galaxies-kavli/runscripts/run_rf.py \
+                    --features_file=${features_file} \
+                    --shape_datapath=${shape_datapath} \
+                    --outdir=${outdir} --high_res \
+                    --good_radius_feats \
+                    --triaxiality_based
 fi

@@ -179,10 +179,10 @@ custom_lines = [Line2D([0], [0], color=colors['P'], lw=10),
                 Line2D([0], [0], color=colors['T'], lw=10),
                 Line2D([0], [0], color=colors['S'], lw=10)]
 axes1[0].legend(custom_lines,
-               ['Prolate (%s)' % counter_p,
-                'Oblate (%s)' % counter_o,
-                'Triaxial (%s)' % counter_t,
-                'Spherical (%s)' % counter_s],
+               ['Prolate (N=%s)' % counter_p,
+                'Oblate (N=%s)' % counter_o,
+                'Triaxial (N=%s)' % counter_t,
+                'Spherical (N=%s)' % counter_s],
                bbox_to_anchor=(1, 0.9), frameon=False)
 # save figure
 filename = 'shape%s_trends.png' % (Rdecider)
@@ -199,10 +199,10 @@ axes2[2].set_xlabel('R (kpc)')
 fig2.set_size_inches(15, 15)
 # add legend
 axes2[0].legend(custom_lines,
-               ['Prolate (%s)' % counter_p,
-                'Oblate (%s)' % counter_o,
-                'Triaxial (%s)' % counter_t,
-                'Spherical (%s)' % counter_s],
+               ['Prolate (N=%s)' % counter_p,
+                'Oblate (N=%s)' % counter_o,
+                'Triaxial (N=%s)' % counter_t,
+                'Spherical (N=%s)' % counter_s],
                bbox_to_anchor=(1, 0.9), frameon=True)
 # save figure
 filename = 'shape%s_trends_differences.png' % (Rdecider)
@@ -217,10 +217,10 @@ axes3[2].set_xlabel('T')
 for i in range(3):
     axes3[i].set_ylabel('Counts')
 axes3[0].legend(custom_lines,
-               ['Prolate (%s)' % counter_p,
-                'Oblate (%s)' % counter_o,
-                'Triaxial (%s)' % counter_t,
-                'Spherical (%s)' % counter_s],
+               ['Prolate (N=%s)' % counter_p,
+                'Oblate (N=%s)' % counter_o,
+                'Triaxial (N=%s)' % counter_t,
+                'Spherical (N=%s)' % counter_s],
                bbox_to_anchor=(1, 0.9), frameon=False)
 fig3.set_size_inches(15, 15)
 filename = 'shape%s_histograms.png' % (Rdecider)
@@ -252,10 +252,10 @@ plt.xlabel('b/a_%s' % Rdecider)
 plt.ylabel('c/a_%s' % Rdecider)
 # add legend
 plt.legend(custom_lines,
-           ['Prolate (%s)' % counters['P'],
-            'Oblate (%s)' % counters['O'],
-            'Triaxial (%s)' % counters['T'],
-            'Spherical (%s)' % counters['S']],
+           ['Prolate (N=%s)' % counters['P'],
+            'Oblate (N=%s)' % counters['O'],
+            'Triaxial (N=%s)' % counters['T'],
+            'Spherical (N=%s)' % counters['S']],
            loc='best', frameon=True)
 # save plot
 filename = 'axis_ratios_classification.png'

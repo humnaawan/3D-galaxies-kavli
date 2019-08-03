@@ -52,8 +52,8 @@ parser.add_option('--good_radius_feats',
 parser.add_option('--plot_feature_dists',
                   action='store_true', dest='plot_feature_dists', default=False,
                   help='Plot distribution for the features.')
-parser.add_option('--just_triaxiality',
-                  action='store_true', dest='just_triaxiality', default=False,
+parser.add_option('--triaxiality_based',
+                  action='store_true', dest='triaxiality_based', default=False,
                   help='Using only triaxiality; only valid for regression.')
 # ------------------------------------------------------------------------------
 (options, args) = parser.parse_args()
@@ -79,9 +79,7 @@ good_radius_feats = options.good_radius_feats
 plot_feature_dists = options.plot_feature_dists
 if plot_feature_dists and regress:
     raise ValueError('plot_feature_dists tag is not valid for regression.')
-just_triaxiality = options.just_triaxiality
-if just_triaxiality and not regress:
-    raise ValueError('just_triaxiality tag is only valid for regression.')
+triaxiality_based = options.triaxiality_based
 # ------------------------------------------------------------------------------
 start_time0 = time.time()
 # make the outdir if it doesn't exist
@@ -100,7 +98,7 @@ if high_res and m100:
 start_time = time.time()
 # ------------------------------------------------------------------------------
 # read in shape data
-if regress:
+if regress or triaxiality_based:
     Rstar = 100
     shape_data = {}
     # loop over the local foders; each folder is for a specific halo
@@ -115,17 +113,24 @@ if regress:
         # find value specified rstar
         ind = np.where( data_now['Rstar'] == Rstar )[0]
         if i == 0:
-            if not just_triaxiality:
+            if not triaxiality_based:
                 shape_data['b/a_%s' % Rstar] = [ data_now['b/a'][ind] ]
                 shape_data['c/a_%s' % Rstar] = [ data_now['c/a'][ind] ]
             shape_data['T_%s' % Rstar] = [ data_now['T'][ind] ]
         else:
-            if not just_triaxiality:
+            if not triaxiality_based:
                 shape_data['b/a_%s' % Rstar] += [ data_now['b/a'][ind] ]
                 shape_data['c/a_%s' % Rstar] += [ data_now['c/a'][ind] ]
             shape_data['T_%s' % Rstar] += [ data_now['T'][ind] ]
     for key in shape_data:
         shape_data[key] = np.array(shape_data[key]).flatten()
+    # asseble classification based on triaxiality
+    if not regress:
+        shape_class = {}
+        shape_class['shape'] = np.empty_like( shape_data['T_%s' % Rstar] ).astype(str)
+        shape_class['shape'][:] = 'Not-P'
+        shape_class['shape'][ shape_data['T_%s' % Rstar] > 0.7] = 'P'
+        shape_data = shape_class
     shape_data = pd.DataFrame( shape_data )
 else:
     file = [ f for f in os.listdir(shape_datapath) if f.startswith('shape100_')][0]

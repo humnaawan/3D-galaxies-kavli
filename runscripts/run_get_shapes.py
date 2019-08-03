@@ -264,5 +264,43 @@ plt.savefig('%s/%s'%(fig_dir, filename), format='png',
 plt.close('all')
 readme.update(to_write='Saved %s\n' % filename)
 
+# plot the figures with classification based on the triaxiality
+threshold_T = 0.7
+counters = {}
+plt.clf()
+# prolates
+ind = np.where( shape_data_vals['T_100'] > threshold_T )[0]
+counters['P'] = len(ind)
+plt.plot(shape_data_vals['b/a_100'][ind], shape_data_vals['c/a_100'][ind], '.',
+        color=colors['P'])
+# not-prolates
+ind = np.where( shape_data_vals['T_100'] <= threshold_T )[0]
+counters['Not-P'] = len(ind)
+plt.plot(shape_data_vals['b/a_100'][ind], shape_data_vals['c/a_100'][ind], '.',
+        color='orange')
+# add 1-1 line; also the analog as in Hongyu's Fig 2
+x = np.arange(0, 1.4, 0.1)
+y = x - 0.2
+plt.plot(x, x, 'k-')
+plt.plot(x, y, 'k-')
+# plot details
+plt.xlim(0, 1)
+plt.ylim(0, 1)
+plt.xlabel('b/a_%s' % Rdecider)
+plt.ylabel('c/a_%s' % Rdecider)
+# add legend
+custom_lines = [Line2D([0], [0], color=colors['P'], lw=10),
+                Line2D([0], [0], color='orange', lw=10)]
+plt.legend(custom_lines,
+           [r'Prolate (T$>$%s) (N=%s)' % ( threshold_T, counters['P'] ),
+            r'Not-Prolate (T$\leq$%s) (N=%s)' % (threshold_T, counters['Not-P'])],
+           loc='best', frameon=True)
+# save plot
+filename = 'axis_ratios_classification_T-based.png'
+plt.savefig('%s/%s'%(fig_dir, filename), format='png',
+            bbox_inches='tight')
+plt.close('all')
+readme.update(to_write='Saved %s\n' % filename)
+
 update = 'Done.\n## Time taken: %s\n'%get_time_passed(start_time0)
 readme.update(to_write=update)

@@ -4,7 +4,7 @@ import pickle
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import operator
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold, cross_val_score
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import mean_squared_error, classification_report
@@ -46,6 +46,9 @@ def run_rf(feats, feat_labels, targets, target_labels, outdir,
     rf = RandomForestRegressor(n_estimators=20, verbose=0, random_state=42)
     rf.fit(x_train, y_train)
     update += 'param values %s: ' % rf.get_params()
+    ## cross-validation
+    kfold = KFold(n_splits=10, random_state=42)
+    update += '\ncross val score: %s ' % cross_val_score(rf, x_train, y_train, cv=kfold).mean()
     if readme is not None:
         readme.update(to_write=update)
     # fit the model to training set first
@@ -85,7 +88,8 @@ def run_rf(feats, feat_labels, targets, target_labels, outdir,
                    'max_depth': max_depth,
                    'min_samples_split': min_samples_split,
                    'min_samples_leaf': min_samples_leaf,
-                   'bootstrap': bootstrap}
+                   'bootstrap': bootstrap
+                   }
     update = 'param grid \n%s\n' % random_grid
     if readme is not None:
         readme.update(to_write=update)
@@ -99,6 +103,9 @@ def run_rf(feats, feat_labels, targets, target_labels, outdir,
     # Fit the random search model
     rf_random.fit(x_train, y_train)
     update = 'Best params: %s' % rf_random.best_params_
+    ## cross-validation
+    kfold = KFold(n_splits=10, random_state=42)
+    update += '\ncross val score: %s ' % cross_val_score(rf_random.best_estimator_, x_train, y_train, cv=kfold).mean()
     if readme is not None:
         readme.update(to_write=update)
     # evaluate model

@@ -4,7 +4,8 @@ from matplotlib.lines import Line2D
 import pandas as pd
 import numpy as np
 import pickle, datetime, time, socket, os
-
+from sklearn.manifold import TSNE
+from mpl_toolkits.mplot3d import Axes3D
 from d3g2d import run_rf, readme as readme_obj, get_time_passed, rcparams
 for key in rcparams: mpl.rcParams[key] = rcparams[key]
 # ------------------------------------------------------------------------------
@@ -379,6 +380,52 @@ for key in ['logm100', 'logm', 'logm30']:
                 bbox_inches='tight')
     plt.close('all')
     readme.update(to_write='Saved %s\n' % filename)
+# ----------------------------------------------------------------------
+# plot tSNE plots
+def plot_highd_data(features, targets, title, figlabel):
+    # will look for P  in targets
+    n_components = 2
+    # get results
+    tsne = TSNE(n_components=n_components, verbose=1, perplexity=40, n_iter=300)
+    tsne_results = tsne.fit_transform(features)
+    # set up
+    hue = np.array( len( targets ) * ['r'] )
+    hue[ targets != 'P' ] = 'g'
+    #
+    plt.clf()
+    plt.scatter( tsne_results[:,0], tsne_results[:,1], color=hue )
+    plt.xlabel('tsne 2d comp1')
+    plt.ylabel('tsne 2d comp2')
+    plt.title(title)
+    # details
+    custom_lines = [Line2D([0], [0], color='r', lw=2),
+                    Line2D([0], [0], color='g', lw=2)
+                    ]
+    plt.legend(custom_lines, ['Prolate', 'Not-Prolate'], frameon=True)
+    filename1 = 'tsne_2d_%s.png' % figlabel
+    plt.savefig('%s/%s'%(fig_dir, filename1), format='png',
+                bbox_inches='tight')
+    plt.close('all')
+
+    # plot 3d project
+    plt.clf()
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(*zip(*tsne_results), color=hue)
+    plt.suptitle(title, fontsize=16, y=0.85)
+    plt.legend(custom_lines, ['Prolate', 'Not-Prolate'], frameon=True)
+    filename2 = 'tsne_3d_%s.png' % figlabel
+    plt.savefig('%s/%s'%(fig_dir, filename2), format='png',
+                bbox_inches='tight')
+    plt.close('all')
+    return [filename1, filename2]
+
+# now save
+fnames = plot_highd_data(features=feats.values,
+                         targets=shape_data['shape'],
+                         title='classification based on axis ratios',
+                         figlabel='axis-ratios-based_shape%s' % Rdecider)
+readme.update(to_write='Saved %s\n' % fnames)
 
 # ----------------------------------------------------------------------
 readme.update(to_write='## Time taken: %s\n'%get_time_passed(start_time))

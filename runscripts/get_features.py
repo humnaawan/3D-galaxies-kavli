@@ -429,6 +429,7 @@ readme.update(to_write='Saved %s\n' % fnames)
 
 # now work with shapes based on triaxiality and plot some things
 shape_data = {}
+T_20, T_40 = [], []
 # loop over the local foders; each folder is for a specific halo
 for i, folder in enumerate([f for f in os.listdir(shape_datapath) if f.startswith('TNG')]):
     # ---------------------------------------------------------------------
@@ -444,13 +445,21 @@ for i, folder in enumerate([f for f in os.listdir(shape_datapath) if f.startswit
         shape_data['T_%s' % Rdecider] = [ data_now['T'][ind] ]
     else:
         shape_data['T_%s' % Rdecider] += [ data_now['T'][ind] ]
+    #
+    T_20 += [ data_now['T'][ np.where( data_now['Rstar'] == 20 )[0] ] ]
+    T_40 += [ data_now['T'][ np.where( data_now['Rstar'] == 40 )[0] ] ]
+    #
 for key in shape_data:
     shape_data[key] = np.array(shape_data[key]).flatten()
+#
+T_20 = np.array(T_20).flatten()
+T_40 = np.array(T_40).flatten()
 # assemble classification based on triaxiality
+threshold_T = 0.7
 shape_class = {}
 shape_class['shape'] = np.empty_like( shape_data['T_%s' % Rdecider] ).astype(str)
 shape_class['shape'][:] = 'Not-P'
-shape_class['shape'][ shape_data['T_%s' % Rdecider] > 0.7] = 'P'
+shape_class['shape'][ shape_data['T_%s' % Rdecider] > threshold_T] = 'P'
 shape_data = shape_class
 shape_data = pd.DataFrame( shape_data )
 # now plot
@@ -504,5 +513,40 @@ for key in ['logm100', 'logm', 'logm30']:
                 bbox_inches='tight')
     plt.close('all')
     readme.update(to_write='Saved %s\n' % filename)
+# ----------------------------------------------------------------------
+# plot ellipticity gradients vs triaxiality gradients
+hue = np.array( ['r'] * len(T_20)  )
+hue[ shape_class['shape'] == 'P' ] = 'g'
+plt.clf()
+plt.scatter( feats['e_37'] - feats['e_18'], T_40 - T_20, color=hue)
+plt.xlabel( r'e$_{37}$ - e$_{18}$' )
+plt.ylabel( r'T$_{40}$ - T$_{20}$' )
+custom_lines = [Line2D([0], [0], color='g', lw=10),
+                Line2D([0], [0], color='r', lw=10)]
+plt.legend(custom_lines,
+           [r'Prolate (T$_{%s}>$%s)' % ( Rdecider, threshold_T, ),
+            r'Not-Prolate (T$_{%s}\leq$%s ' % ( Rdecider, threshold_T ) ],
+           loc='best', frameon=True)
+filename = 'egrad_vs_Tgrad_shape%s.png' % Rdecider
+plt.savefig('%s/%s'%(fig_dir, filename), format='png',
+            bbox_inches='tight')
+plt.close('all')
+readme.update(to_write='Saved %s\n' % filename)
+# plot the actual values of ellipticity vs triaxiality
+plt.clf()
+plt.scatter( feats['e_37'], T_40, color=hue)
+plt.xlabel( r'e$_{37}$' )
+plt.ylabel( r'T$_{40}$' )
+custom_lines = [Line2D([0], [0], color='g', lw=10),
+                Line2D([0], [0], color='r', lw=10)]
+plt.legend(custom_lines,
+           [r'Prolate (T$_{%s}>$%s)' % ( Rdecider, threshold_T, ),
+            r'Not-Prolate (T$_{%s}\leq$%s ' % ( Rdecider, threshold_T ) ],
+           loc='best', frameon=True)
+filename = 'e_vs_T_shape%s.png' % Rdecider
+plt.savefig('%s/%s'%(fig_dir, filename), format='png',
+            bbox_inches='tight')
+plt.close('all')
+readme.update(to_write='Saved %s\n' % filename)
 # ----------------------------------------------------------------------
 readme.update(to_write='## Time taken: %s\n'%get_time_passed(start_time))

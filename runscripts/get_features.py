@@ -19,12 +19,15 @@ parser.add_option('--outdir', dest='outdir',
 parser.add_option('--low_res',
                   action='store_true', dest='low_res', default=False,
                   help='Treat data as low resolution data.')
+parser.add_option('--rdecider', dest='Rdecider', default=100,
+                  help='Radius to consider the shape at.')
 # ------------------------------------------------------------------------------
 (options, args) = parser.parse_args()
 summary_datapath = options.summary_datapath
 shape_datapath = options.shape_datapath
 outdir = options.outdir
 low_res = options.low_res
+Rdecider = int( options.Rdecider )
 # ------------------------------------------------------------------------------
 start_time = time.time()
 readme_tag = ''
@@ -130,7 +133,7 @@ def get_features_lowres(data_for_halo):
     return features
 # ------------------------------------------------------------------------------
 # read in shape data to get the haloIds
-file = [ f for f in os.listdir(shape_datapath) if f.startswith('shape100_')][0]
+file = [ f for f in os.listdir(shape_datapath) if f.startswith('shape%s_' % Rdecider)][0]
 with open('%s/%s' % (shape_datapath, file), 'rb') as f:
     shape_data = pickle.load(f)
 # ------------------------------------------------------------------------------
@@ -238,7 +241,7 @@ plt.legend(custom_lines,
             'Spherical (%s)' % counters['S']],
            bbox_to_anchor=(1, 1), frameon=True)
 # save plot
-filename = 'mass_profiles_%sgals.png' % (i+1)
+filename = 'mass_profiles_%sgals_shape%s.png' % (i+1, Rdecider)
 plt.savefig('%s/%s'%(fig_dir, filename), format='png',
             bbox_inches='tight')
 plt.close('all')
@@ -326,7 +329,7 @@ axes[0].legend(custom_lines,
                 'Spherical (%s)' % counters['S']],
                bbox_to_anchor=(1, 1), frameon=True)
 # save plot
-filename = 'mass_profiles_%sgals_wm100quartiles.png' % (i+1)
+filename = 'mass_profiles_%sgals_wm100quartiles_shape%s.png' % (i+1, Rdecider)
 plt.savefig('%s/%s'%(fig_dir, filename), format='png',
             bbox_inches='tight')
 plt.close('all')
@@ -371,7 +374,7 @@ for key in ['logm100', 'logm', 'logm30']:
                 'Prolate Fraction'],
                bbox_to_anchor=(1.6,1), frameon=True)
     # save plot
-    filename = 'hongyu_analog_%sgals_%s.png' % (i+1, key)
+    filename = 'hongyu_analog_%sgals_%s_shape%s.png' % (i+1, key, Rdecider)
     plt.savefig('%s/%s'%(fig_dir, filename), format='png',
                 bbox_inches='tight')
     plt.close('all')

@@ -23,6 +23,8 @@ parser.add_option('--illustris',
 parser.add_option('--just_plots',
                   action='store_true', dest='just_plots', default=False,
                   help="Just plot the figures; assume data is already saved.")
+parser.add_option('--rdecider', dest='Rdecider', default=100,
+                  help='Radius to consider the shape at.')
 # ------------------------------------------------------------------------------
 (options, args) = parser.parse_args()
 data_dir = options.data_dir
@@ -30,6 +32,7 @@ quiet = options.quiet
 test = options.test
 illustris = options.illustris
 just_plots = options.just_plots
+Rdecider = int( options.Rdecider )
 # ------------------------------------------------------------------------------
 start_time0 = time.time()
 readme_tag = ''
@@ -78,7 +81,6 @@ if not just_plots:
         if not quiet: print(update)
 # ------------------------------------------------------------------------------
 # now classify
-Rdecider = 100
 if not just_plots:
     update = 'Getting shape classification ... \n'
     start_time = time.time()
@@ -238,7 +240,7 @@ plt.clf()
 for shape in np.unique( shape_data['shape'] ):
     ind = np.where( shape_data['shape'] == shape )[0]
     counters[shape] = len(ind)
-    plt.plot(shape_data_vals['b/a_100'][ind], shape_data_vals['c/a_100'][ind], '.',
+    plt.plot(shape_data_vals['b/a_%s' % Rdecider][ind], shape_data_vals['c/a_%s' % Rdecider][ind], '.',
             color=colors[shape])
 # add 1-1 line; also the analog as in Hongyu's Fig 2
 x = np.arange(0, 1.4, 0.1)
@@ -269,14 +271,14 @@ threshold_T = 0.7
 counters = {}
 plt.clf()
 # prolates
-ind = np.where( shape_data_vals['T_100'] > threshold_T )[0]
+ind = np.where( shape_data_vals['T_%s' % Rdecider] > threshold_T )[0]
 counters['P'] = len(ind)
-plt.plot(shape_data_vals['b/a_100'][ind], shape_data_vals['c/a_100'][ind], '.',
+plt.plot(shape_data_vals['b/a_%s' % Rdecider][ind], shape_data_vals['c/a_%s' % Rdecider][ind], '.',
         color=colors['P'])
 # not-prolates
-ind = np.where( shape_data_vals['T_100'] <= threshold_T )[0]
+ind = np.where( shape_data_vals['T_%s' % Rdecider] <= threshold_T )[0]
 counters['Not-P'] = len(ind)
-plt.plot(shape_data_vals['b/a_100'][ind], shape_data_vals['c/a_100'][ind], '.',
+plt.plot(shape_data_vals['b/a_%s' % Rdecider][ind], shape_data_vals['c/a_%s' % Rdecider][ind], '.',
         color='orange')
 # add 1-1 line; also the analog as in Hongyu's Fig 2
 x = np.arange(0, 1.4, 0.1)

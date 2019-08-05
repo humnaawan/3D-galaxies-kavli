@@ -427,5 +427,82 @@ fnames = plot_highd_data(features=feats.values,
                          figlabel='axis-ratios-based_shape%s' % Rdecider)
 readme.update(to_write='Saved %s\n' % fnames)
 
+# now work with shapes based on triaxiality and plot some things
+shape_data = {}
+# loop over the local foders; each folder is for a specific halo
+for i, folder in enumerate([f for f in os.listdir(shape_datapath) if f.startswith('TNG')]):
+    # ---------------------------------------------------------------------
+    # now read in the data
+    file = [ f for f in os.listdir('%s/%s' % (shape_datapath, folder)) if f.startswith('shape_')][0]
+    with open('%s/%s/%s' % (shape_datapath, folder, file), 'rb') as f:
+        data_now = pickle.load(f)
+    # add triaxiality
+    data_now['T'] = (1 -  data_now['b/a'] ** 2 ) / (1 -  data_now['c/a'] ** 2 )
+    # find value specified rstar
+    ind = np.where( data_now['Rstar'] == Rdecider )[0]
+    if i == 0:
+        shape_data['T_%s' % Rdecider] = [ data_now['T'][ind] ]
+    else:
+        shape_data['T_%s' % Rdecider] += [ data_now['T'][ind] ]
+for key in shape_data:
+    shape_data[key] = np.array(shape_data[key]).flatten()
+# assemble classification based on triaxiality
+shape_class = {}
+shape_class['shape'] = np.empty_like( shape_data['T_%s' % Rdecider] ).astype(str)
+shape_class['shape'][:] = 'Not-P'
+shape_class['shape'][ shape_data['T_%s' % Rdecider] > 0.7] = 'P'
+shape_data = shape_class
+shape_data = pd.DataFrame( shape_data )
+# now plot
+fnames = plot_highd_data(features=feats.values,
+                         targets=shape_data['shape'],
+                         title='classification based on triaxiality',
+                         figlabel='T-based_shape%s' % Rdecider)
+readme.update(to_write='Saved %s\n' % fnames)
+# ----------------------------------------------------------------------
+# plot the analog of Hongyu's Fig 3.
+for key in ['logm100', 'logm', 'logm30']:
+    logmass = feats[key].values
+    m_arr = np.arange( min(logmass) - 0.1, max(logmass) + 0.1, 0.1 )
+    # set up
+    fig, ax1 = plt.subplots()
+    # plot normed densities
+    ind1 = np.where( shape_data['shape'] == 'P' )[0]
+    ax1.hist(logmass[ind1], histtype='step', bins=m_arr, color='r',
+             lw=2, density=True )
+    ind2 = np.where( shape_data['shape'] != 'P')[0]
+    ax1.hist(logmass[ind2], histtype='step', bins=m_arr, color='b',
+             lw=2, density=True )
+    ax1.set_xlabel( key )
+    ax1.set_ylabel( 'Normalized Number Densities' )
+    # set up the second axis
+    ax2 = ax1.twinx()
+    # plot fraction
+    frac, ms = [], []
+    for j in range(len(m_arr) - 1):
+        mlow, mupp = m_arr[j], m_arr[j+1]
+        ind = np.where( ( logmass >= mlow ) & ( logmass < mupp ))[0]
+        if len(ind) > 0:
+            frac.append( len( set(ind1) & set(ind) ) / len( ind) )
+            ms.append( np.median( [mlow, mupp ]) )
+    ax2.plot(ms, frac, 'k.-', label='Prolate Fraction')
+    ax2.set_ylim(0, 1)
+    ax2.set_ylabel( 'Prolate Fraction', rotation=-90, labelpad=20)
+    ax2.grid(None)
+    # details
+    custom_lines = [Line2D([0], [0], color='r', lw=2),
+                    Line2D([0], [0], color='b', lw=2),
+                    Line2D([0], [0], color='k', lw=2)]
+    plt.legend(custom_lines,
+               ['Prolate normed density (N=%s)' % len(ind1),
+                'Not-Prolate normed density (N=%s)' % len(ind2),
+                'Prolate Fraction'],
+               bbox_to_anchor=(1.6,1), frameon=True)
+    # save plot
+    filename = 'hongyu_analog_%sgals_%s_shape%s_T-based.png' % (i+1, key, Rdecider)
+    plt.savefig('%s/%s'%(fig_dir, filename), format='png',
+                bbox_inches='tight')
+    plt.close('all')
+    readme.update(to_write='Saved %s\n' % filename)
 # ----------------------------------------------------------------------
 readme.update(to_write='## Time taken: %s\n'%get_time_passed(start_time))

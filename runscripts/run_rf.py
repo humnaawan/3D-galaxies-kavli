@@ -60,6 +60,8 @@ parser.add_option('--add_tsne_feats',
                   help='Add tsne probs as features.')
 parser.add_option('--n_comps', dest='n_comps', default=2,
                   help='Number of components.')
+parser.add_option('--rdecider', dest='Rdecider', default=100,
+                  help='Radius to consider the shape at.')
 # ------------------------------------------------------------------------------
 (options, args) = parser.parse_args()
 features_file = options.features_file
@@ -87,6 +89,7 @@ if plot_feature_dists and regress:
 triaxiality_based = options.triaxiality_based
 add_tsne_feats = options.add_tsne_feats
 n_comps = int( options.n_comps )
+Rdecider = int( options.Rdecider )
 # ------------------------------------------------------------------------------
 start_time0 = time.time()
 # make the outdir if it doesn't exist
@@ -106,7 +109,6 @@ start_time = time.time()
 # ------------------------------------------------------------------------------
 # read in shape data
 if regress or triaxiality_based:
-    Rstar = 100
     shape_data = {}
     # loop over the local foders; each folder is for a specific halo
     for i, folder in enumerate([f for f in os.listdir(shape_datapath) if f.startswith('TNG')]):
@@ -118,29 +120,29 @@ if regress or triaxiality_based:
         # add triaxiality
         data_now['T'] = (1 -  data_now['b/a'] ** 2 ) / (1 -  data_now['c/a'] ** 2 )
         # find value specified rstar
-        ind = np.where( data_now['Rstar'] == Rstar )[0]
+        ind = np.where( data_now['Rstar'] == Rdecider )[0]
         if i == 0:
             if not triaxiality_based:
-                shape_data['b/a_%s' % Rstar] = [ data_now['b/a'][ind] ]
-                shape_data['c/a_%s' % Rstar] = [ data_now['c/a'][ind] ]
-            shape_data['T_%s' % Rstar] = [ data_now['T'][ind] ]
+                shape_data['b/a_%s' % Rdecider] = [ data_now['b/a'][ind] ]
+                shape_data['c/a_%s' % Rdecider] = [ data_now['c/a'][ind] ]
+            shape_data['T_%s' % Rdecider] = [ data_now['T'][ind] ]
         else:
             if not triaxiality_based:
-                shape_data['b/a_%s' % Rstar] += [ data_now['b/a'][ind] ]
-                shape_data['c/a_%s' % Rstar] += [ data_now['c/a'][ind] ]
-            shape_data['T_%s' % Rstar] += [ data_now['T'][ind] ]
+                shape_data['b/a_%s' % Rdecider] += [ data_now['b/a'][ind] ]
+                shape_data['c/a_%s' % Rdecider] += [ data_now['c/a'][ind] ]
+            shape_data['T_%s' % Rdecider] += [ data_now['T'][ind] ]
     for key in shape_data:
         shape_data[key] = np.array(shape_data[key]).flatten()
     # asseble classification based on triaxiality
     if not regress:
         shape_class = {}
-        shape_class['shape'] = np.empty_like( shape_data['T_%s' % Rstar] ).astype(str)
+        shape_class['shape'] = np.empty_like( shape_data['T_%s' % Rdecider] ).astype(str)
         shape_class['shape'][:] = 'Not-P'
-        shape_class['shape'][ shape_data['T_%s' % Rstar] > 0.7] = 'P'
+        shape_class['shape'][ shape_data['T_%s' % Rdecider] > 0.7] = 'P'
         shape_data = shape_class
     shape_data = pd.DataFrame( shape_data )
 else:
-    file = [ f for f in os.listdir(shape_datapath) if f.startswith('shape100_')][0]
+    file = [ f for f in os.listdir(shape_datapath) if f.startswith('shape%s_' % Rdecider)][0]
     with open('%s/%s' % (shape_datapath, file), 'rb') as f:
         shape = pickle.load(f)
     shape_data = pd.DataFrame({ 'shape': np.array( shape['shape'] ) } )

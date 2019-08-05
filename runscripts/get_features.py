@@ -74,9 +74,9 @@ def get_features_highres(data_for_halo):
         features['a1_%.f' % (data_for_halo['rkpc_shape'][ind])] = data_for_halo['a1_shape'][ind]
         features['a4_%.f' % (data_for_halo['rkpc_shape'][ind])] = data_for_halo['a4_shape'][ind]
     # add ellipticity close to 100kpc
-    ind = 29
-    rval = data_for_halo['rkpc_shape'][ind]
-    features['e_%.f' % rval] = data_for_halo['e_shape'][ind]
+    for ind in range(17,31):
+        rval = data_for_halo['rkpc_shape'][ind]
+        features['e_%.f' % rval] = data_for_halo['e_shape'][ind]
     # add logm100
     features['logm100'] = data_for_halo['aper_logms'][-2]
 

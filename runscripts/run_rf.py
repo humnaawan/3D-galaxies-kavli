@@ -9,7 +9,7 @@ warnings.filterwarnings("ignore")
 import datetime, time, socket, os
 from d3g2d import run_rf, readme as readme_obj, get_time_passed, rcparams
 for key in rcparams: mpl.rcParams[key] = rcparams[key]
-
+from sklearn.manifold import TSNE
 # ------------------------------------------------------------------------------
 from optparse import OptionParser
 parser = OptionParser()
@@ -55,6 +55,11 @@ parser.add_option('--plot_feature_dists',
 parser.add_option('--triaxiality_based',
                   action='store_true', dest='triaxiality_based', default=False,
                   help='Using only triaxiality; only valid for regression.')
+parser.add_option('--add_tsne_feats',
+                  action='store_true', dest='add_tsne_feats', default=False,
+                  help='Add tsne probs as features.')
+parser.add_option('--n_comps', dest='n_comps', default=2,
+                  help='Number of components.')
 # ------------------------------------------------------------------------------
 (options, args) = parser.parse_args()
 features_file = options.features_file
@@ -80,6 +85,8 @@ plot_feature_dists = options.plot_feature_dists
 if plot_feature_dists and regress:
     raise ValueError('plot_feature_dists tag is not valid for regression.')
 triaxiality_based = options.triaxiality_based
+add_tsne_feats = options.add_tsne_feats
+n_comps = int( options.n_comps )
 # ------------------------------------------------------------------------------
 start_time0 = time.time()
 # make the outdir if it doesn't exist
@@ -181,6 +188,13 @@ if good_radius_feats:
     for key in ['delM_107_150', 'dele_111_160', 'delpa_111_160']:
         if key in feats:
             _ = feats.pop(key)
+
+if add_tsne_feats:
+    readme.update(to_write='Adding tSNE probs for %s components' % n_comps)
+    tsne = TSNE(n_components=n_comps, verbose=1, perplexity=40, n_iter=300)
+    tsne_results = tsne.fit_transform(feats.values)
+    for i in range(n_comps):
+        feats['tsne-2d-%scomp' % (i+1)] = tsne_results[:,i]
 # update
 update = '## Running analysis with %s features:\n%s\n' % ( len(feats.keys()), feats.keys() )
 update += '## For %s targets:\n%s\n' % ( len(shape_data.keys()), shape_data.keys() )

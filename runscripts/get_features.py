@@ -24,13 +24,22 @@ parser.add_option('--low_res',
                   help='Treat data as low resolution data.')
 parser.add_option('--rdecider', dest='Rdecider', default=100,
                   help='Radius to consider the shape at.')
+parser.add_option('--data_tag', dest='data_tag',
+                  help='data_tag to include in the saved filenames.')
 # ------------------------------------------------------------------------------
 (options, args) = parser.parse_args()
 summary_datapath = options.summary_datapath
 shape_datapath = options.shape_datapath
 outdir = options.outdir
 low_res = options.low_res
+if low_res: res_tag = 'low_res'
+else: res_tag = 'high_res'
 Rdecider = int( options.Rdecider )
+data_tag = options.data_tag
+if data_tag is None: data_tag = ''
+data_tag = '_%s_%s_shape%s' % ( res_tag, data_tag, Rdecider )
+# check to ensure outdir exists
+os.makedirs(outdir, exist_ok=True)
 # ------------------------------------------------------------------------------
 start_time = time.time()
 readme_tag = ''
@@ -40,7 +49,7 @@ update += 'Options:\n%s\n' % options
 readme = readme_obj(outdir=outdir, readme_tag=readme_tag, first_update=update)
 readme.run()
 # set up the figs directory
-fig_dir = '%s/figs/' % outdir
+fig_dir = '%s/figs%s/' % (outdir, data_tag)
 os.makedirs(fig_dir, exist_ok=True)
 # start things up
 start_time = time.time()
@@ -106,7 +115,7 @@ for i, haloId in enumerate(shape_data['haloId']):
 # assemble the features as a dataframe
 feats = pd.DataFrame(feats, columns=keys)
 # save the data
-filename = 'features_%s.csv' % len( feats.keys() )
+filename = 'features_%s%s.csv' % ( len( feats.keys() ), data_tag )
 feats.to_csv('%s/%s' % (outdir, filename), index=False)
 readme.update(to_write='Saved %s in %s\n' % (filename, outdir))
 

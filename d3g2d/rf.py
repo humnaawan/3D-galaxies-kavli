@@ -9,6 +9,8 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import mean_squared_error, classification_report
 from sklearn.preprocessing import OneHotEncoder
+import os
+os.environ["PYTHONWARNINGS"] = "ignore:Liblinear failed to converge:UserWarning:sklearn.svm.base"
 
 from .helpers_plot import plot_confusion_matrix
 from .settings import rcparams

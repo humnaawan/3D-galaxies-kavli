@@ -91,6 +91,7 @@ add_tsne_feats = options.add_tsne_feats
 n_comps = int( options.n_comps )
 Rdecider = int( options.Rdecider )
 # ------------------------------------------------------------------------------
+print('\n## regress: %s\n' % regress)
 start_time0 = time.time()
 # make the outdir if it doesn't exist
 os.makedirs(outdir, exist_ok=True)

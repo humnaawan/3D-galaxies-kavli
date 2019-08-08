@@ -73,7 +73,7 @@ def run_rf(feats, feat_labels, targets, target_labels, outdir,
     if readme is not None:
         readme.update(to_write=update)
     # Number of trees in random forest
-    n_estimators = [int(x) for x in np.linspace(start=200, stop=2000, num=10)]
+    n_estimators = [int(x) for x in np.linspace(start=50, stop=500, num=10)]
     # Number of features to consider at every split
     max_features = ['auto', 'sqrt']
     # Maximum number of levels in tree
@@ -102,7 +102,7 @@ def run_rf(feats, feat_labels, targets, target_labels, outdir,
     # random search of parameters, using 3 fold cross validation,
     # search across 100 different combinations, and use all available cores
     rf_random = RandomizedSearchCV(estimator=rf, param_distributions=random_grid,
-                                   n_iter=100, cv=3, verbose=0, random_state=42, n_jobs=-1)
+                                   n_iter=100, cv=5, verbose=-2, random_state=42, n_jobs=-1)
     # Fit the random search model
     rf_random.fit(x_train, y_train)
     update = 'Best params: %s\n' % rf_random.best_params_

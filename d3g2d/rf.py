@@ -7,7 +7,7 @@ import operator
 from sklearn.model_selection import train_test_split, KFold, cross_val_score
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.model_selection import RandomizedSearchCV
-from sklearn.metrics import mean_squared_error, classification_report
+from sklearn.metrics import mean_squared_error, classification_report, accuracy_score
 from sklearn.preprocessing import OneHotEncoder
 import os
 os.environ["PYTHONWARNINGS"] = "ignore:Liblinear failed to converge:UserWarning:sklearn.svm.base"
@@ -47,10 +47,11 @@ def run_rf(feats, feat_labels, targets, target_labels, outdir,
     update += '\n## Trying RF with no optimization ... \n'
     rf = RandomForestRegressor(n_estimators=20, verbose=0, random_state=42)
     rf.fit(x_train, y_train)
-    update += 'param values %s: ' % rf.get_params()
+    update += 'param values: %s\n' % rf.get_params()
     ## cross-validation
     kfold = KFold(n_splits=10, random_state=42)
-    update += '\ncross val score: %s ' % cross_val_score(rf, x_train, y_train, cv=kfold).mean()
+    scores = cross_val_score(rf, x_train, y_train, cv=kfold)
+    update += '\n# cross val score: accuracy: %0.2f (+/- %0.2f)' % (scores.mean(), scores.std() * 2)
     if readme is not None:
         readme.update(to_write=update)
     # fit the model to training set first
@@ -92,7 +93,7 @@ def run_rf(feats, feat_labels, targets, target_labels, outdir,
                    'min_samples_leaf': min_samples_leaf,
                    'bootstrap': bootstrap
                    }
-    update = 'param grid \n%s\n' % random_grid
+    update = 'param grid: \n%s\n' % random_grid
     if readme is not None:
         readme.update(to_write=update)
 
@@ -104,10 +105,13 @@ def run_rf(feats, feat_labels, targets, target_labels, outdir,
                                    n_iter=100, cv=3, verbose=0, random_state=42, n_jobs=-1)
     # Fit the random search model
     rf_random.fit(x_train, y_train)
-    update = 'Best params: %s' % rf_random.best_params_
+    update = 'Best params: %s\n' % rf_random.best_params_
+    update += '\nCV results: %s\n' % rf_random.cv_results_
+
     ## cross-validation
     kfold = KFold(n_splits=10, random_state=42)
-    update += '\ncross val score: %s ' % cross_val_score(rf_random.best_estimator_, x_train, y_train, cv=kfold).mean()
+    scores = cross_val_score(rf_random.best_estimator_, x_train, y_train, cv=kfold)
+    update += '\n# cross val score: accuracy: %0.2f (+/- %0.2f)' % (scores.mean(), scores.std() * 2)
     if readme is not None:
         readme.update(to_write=update)
     # evaluate model
@@ -178,10 +182,12 @@ def evaluate_model(model, x_arr, y_arr, save_plot, feat_labels, target_labels,
     # predict
     y_pred = model.predict(x_arr)
     # see how well the model is working.
-    mse = get_mse(y_arr, y_pred)
-    r2 = model.score(x_arr, y_arr)   # best possible score is 1.0
-    update = '\n#####################################\n'
-    update +=  'RF performance:\nMSE:%s\nR2 score = %s\n'%(mse, r2)
+    update = '\n#####################################\n%s\n' % data_label
+    update += '#####################################\n'
+    update +=  'RF performance:\n'
+    if regression:
+        update += 'R2 score = %s\n' % model.score(x_arr, y_arr)   # best possible score is 1.0
+        update += 'MSE: %s\n' % get_mse(y_arr, y_pred)
     if feat_labels is None:
         update += '## Feature importance:\n%s\n' % np.array(model.feature_importances_)
     else:
@@ -257,5 +263,8 @@ def evaluate_model(model, x_arr, y_arr, save_plot, feat_labels, target_labels,
                                   readme=readme)
         # print report
         update = classification_report( y_arr_, y_pred_)
+        update +=  '\nAccuracy: %.f%% \n'%( accuracy_score(y_arr_, y_pred_) * 100 )
 
+        if readme is not None:
+            readme.update(to_write=update)
     return y_pred

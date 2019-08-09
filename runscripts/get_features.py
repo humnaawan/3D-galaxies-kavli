@@ -9,7 +9,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from d3g2d import readme as readme_obj, get_time_passed, rcparams
 for key in rcparams: mpl.rcParams[key] = rcparams[key]
 
-from helpers_summarydata_readin import get_features_highres, get_features_lowres
+from helpers_summarydata_readin import get_features_highres, get_features_lowres, get_features_highres_summed
 from helpers_features_plots import summary_data_plots, plot_hongyus_analog, plot_highd_data
 # ------------------------------------------------------------------------------
 from optparse import OptionParser
@@ -27,6 +27,9 @@ parser.add_option('--rdecider', dest='Rdecider', default=100,
                   help='Radius to consider the shape at.')
 parser.add_option('--data_tag', dest='data_tag',
                   help='data_tag to include in the saved filenames.')
+parser.add_option('--summed_data', dest='summed_data',
+                  action='store_true', default=False,
+                  help='Consider the summary data to have multiple projections and nested data structure.')
 # ------------------------------------------------------------------------------
 (options, args) = parser.parse_args()
 summary_datapath = options.summary_datapath
@@ -39,8 +42,10 @@ Rdecider = int( options.Rdecider )
 data_tag = options.data_tag
 if data_tag is None: data_tag = ''
 data_tag = '_%s_%s_shape%s' % ( res_tag, data_tag, Rdecider )
+summed_data = options.summed_data
 # check to ensure outdir exists
 os.makedirs(outdir, exist_ok=True)
+print(outdir)
 # ------------------------------------------------------------------------------
 start_time = time.time()
 readme_tag = ''
@@ -69,15 +74,17 @@ shape_data_abc_based = pd.read_csv('%s/%s' % (shape_datapath, file) )
 for i, haloId in enumerate(shape_data_T_based['haloId']):
     filename = [f for f in os.listdir(summary_datapath) if f.__contains__('_%s_'%haloId)]
     if len(filename) != 1:
-        print(filename, haloId)
-        break
+        raise ValueError('Somethings wrong: haloId %s: file array: %s' % ( haloId, file) )
     else:
         filename = filename[0]
     data = np.load('%s/%s' % (summary_datapath, filename))
     if low_res:
         out = get_features_lowres(data_for_halo=data)
     else:
-        out = get_features_highres(data_for_halo=data)
+        if summed_data:
+            out = get_features_highres_summed(data_for_halo=data)
+        else:
+            out = get_features_highres(data_for_halo=data)
     if i == 0:
         keys = out.keys()
         feats = list(out.values())
@@ -104,7 +111,7 @@ update = summary_data_plots(outdir=fig_dir, summary_datapath=summary_datapath,
                             shape_class_data=shape_class_data,
                             colors_dict=colors_dict,
                             classtag_to_classname=classtag_to_classname,
-                            class_tag=class_tag)
+                            class_tag=class_tag, summed_data=summed_data)
 readme.update(to_write=update)
 
 shape_class_arr = shape_class_data['shape%s_class' % Rdecider].values
@@ -135,7 +142,7 @@ update = summary_data_plots(outdir=fig_dir, summary_datapath=summary_datapath,
                             shape_class_data=shape_class_data,
                             colors_dict=colors_dict,
                             classtag_to_classname=classtag_to_classname,
-                            class_tag=class_tag)
+                            class_tag=class_tag, summed_data=summed_data)
 readme.update(to_write=update)
 
 shape_class_arr = shape_class_data['shape%s_class' % Rdecider].values

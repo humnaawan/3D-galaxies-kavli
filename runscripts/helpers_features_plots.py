@@ -13,7 +13,8 @@ for key in rcparams: mpl.rcParams[key] = rcparams[key]
 __all__ = ['summary_data_plots', 'plot_hongyus_analog', 'plot_highd_data']
 
 def summary_data_plots(outdir, summary_datapath, Rdecider,
-                      shape_class_data, colors_dict, classtag_to_classname, class_tag):
+                      shape_class_data, colors_dict, classtag_to_classname,
+                      class_tag, summed_data):
     if class_tag != '' and class_tag is not None: class_tag = '_%s' % class_tag
     # read in one data set to figure things out
     haloId = shape_class_data['haloId'][0]
@@ -22,7 +23,8 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
         raise ValueError('Somethings wrong: file array: %s' % file)
     filename = filename[0]
     data = np.load('%s/%s' % (summary_datapath, filename))
-
+    if summed_data:
+        data = data[()]
     # things to plot vs rpix_shape
     toplot_pixshape = [f for f in data.keys() if f.endswith('_shape') \
                        and not f.__contains__('err') \
@@ -34,7 +36,7 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
                        ]
     print('\nPlotting rpix_shape vs. %s' % toplot_pixshape )
 
-    toplot_pixsprof = [f for f in data.keys() if f.endswith('_prof') \
+    toplot_pixsprof = [f for f in data.keys() if f.endswith('prof') \
                        and not f.__contains__('err') \
                        and not f.__contains__('output') \
                        and not f.__contains__('rpix_prof') \
@@ -69,6 +71,8 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
             raise ValueError('Somethings wrong: file array: %s' % file)
         filename = filename[0]
         data = np.load('%s/%s' % (summary_datapath, filename))
+        if summed_data:
+            data = data[()]
         # find the shape
         shape_class = np.array(shape_class_data['shape%s_class' % Rdecider])[i]
         # add to the right counter
@@ -82,7 +86,9 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
             axes2[j].plot( data['rkpc_prof'], data[key], '.-',
                           alpha=alpha, color=colors_dict[shape_class])
         # plot logm
-        axes3.plot( data['aper_rkpc'], data['aper_logms'], '.-',
+        if summed_data: mass_key = 'aper_maper'
+        else: mass_key = 'aper_logms'
+        axes3.plot( data['aper_rkpc'], data[mass_key], '.-',
                    alpha=alpha, color=colors_dict[shape_class])
     # plot details
     axes1[0].set_title('Total: %s galaxies' % (i+1) )
@@ -97,7 +103,9 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
         if key.__contains__('mu_') or key.__contains__('maper'):
             axes2[j].set_yscale('log')
     axes2[-1].set_xlabel( 'rkpc_prof' )
-    axes3.set_ylabel('aper_logms')
+    if summed_data:
+        axes3.set_yscale('log')
+    axes3.set_ylabel(mass_key)
     axes3.set_xlabel('aper_rkpc')
 
     # add legend
@@ -105,10 +113,8 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
     for shape_class in colors_dict.keys():
         class_labels += ['%s (N=%s)' % (classtag_to_classname[shape_class], counters[shape_class]) ]
         custom_lines += [ Line2D([0], [0], color=colors_dict[shape_class], lw=10) ]
-    axes1[0].legend(custom_lines, class_labels,
-                    bbox_to_anchor=(1, 0.9), frameon=True)
-    axes2[0].legend(custom_lines, class_labels,
-                    bbox_to_anchor=(1, 0.9), frameon=True)
+    axes1[0].legend(custom_lines, class_labels, loc='best', frameon=True)
+    axes2[0].legend(custom_lines, class_labels, loc='best', frameon=True)
     axes3.legend(custom_lines, class_labels, loc='best', frameon=True)
     # save figure
     filename = 'rshape_profiles_%sgals_shape%s%s.png' % (i+1, Rdecider, class_tag)

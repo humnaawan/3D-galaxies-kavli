@@ -1,8 +1,4 @@
 h0 = 0.704
-illustris_snap2z = {'z': 0.0, 'snap': 135}
-tng_snap2z = {'z': 0.4, 'snap': 72}
-
-summary_datapath = '/Users/humnaawan/repos/3D-galaxies-kavli/data/tng_lowres_2d_summary/'
 
 # plotting params
 fontsize = 18

@@ -69,7 +69,7 @@ if not test:
     haloIds = np.genfromtxt( '%s/haloIds.txt'% data_dir , dtype=int)
 # set up shape tag
 shape_tag = 'shape_%sRvals' % len( Rstar )
-readme.update(to_write='Working with %s galaxies for %s' % ( len(haloIds), sim_name))
+readme.update(to_write='Working with %s galaxies for %s\n' % (len(haloIds), sim_name))
 
 if not post_process_only:
     readme.update(to_write='Getting shape data for all halos ... ')
@@ -78,21 +78,13 @@ if not post_process_only:
         start_time = time.time()
         update = 'Getting shape data for halo %s'  % haloId
         readme.update(to_write=update)
-        print(update)
         filename = get_shape_main(source_dir='%s/%s_halo%s_z%s' % (data_dir, sim_name, haloId, z),
                                   fname='cutout_%s.hdf5' % haloId, z=z,
                                   illustris=test or illustris, Rstar=Rstar)
         update = 'Saved %s\n' % filename
         update += '## Time taken: %s\n'%get_time_passed(start_time)
         readme.update(to_write=update)
-        print(update)
 # ------------------------------------------------------------------------------
-# now classify
-update = 'Getting shape classification ... \n'
-filename = get_shape_class(data_dir=data_dir, startwith_tag=sim_name,
-                           shape_tag=shape_tag, Rdecider=Rdecider)
-readme.update(to_write='Saved %s\n' % filename)
-
 # now save the shape data (b/a, c/a, T) for all the haloes compiled together
 # initiate storing dictionaru
 shape_data = {}
@@ -133,6 +125,19 @@ shape_data = pd.DataFrame( shape_data )
 filename = 'shape%s_data_%shaloIds.csv' % (Rdecider, len(haloIds) )
 shape_data.to_csv('%s/%s' % (outdir, filename), index=False)
 readme.update(to_write='Saved %s\n' % filename)
-print(update)
+
+# ------------------------------------------------------------------------------
+# now classify
+update = 'Getting shape classification based on axis ratios... \n'
+filename = get_shape_class(outdir=outdir, shape_data_dict=shape_data,
+                           axis_ratios_based=True, Rdecider=Rdecider)
+readme.update(to_write='Saved %s\n' % filename)
+
+update = 'Getting shape classification based on T... \n'
+filename = get_shape_class(outdir=outdir, shape_data_dict=shape_data,
+                           axis_ratios_based=False, Rdecider=Rdecider,
+                           threshold_T=0.7)
+readme.update(to_write='Saved %s\n' % filename)
+
 # done
 readme.update(to_write='Done.\n## Time taken: %s\n' % get_time_passed(start_time0))

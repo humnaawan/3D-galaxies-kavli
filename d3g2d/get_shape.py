@@ -4,7 +4,7 @@ import numpy.linalg as LA
 import os
 
 from .helpers_misc import read_cutout
-from .settings import h0, illustris_snap2z, tng_snap2z
+from .settings import h0
 
 __all__ = ['get_shape_main', 'get_shape_class']
 
@@ -111,7 +111,7 @@ def get_shape(x, mpart, Rb=20., decrease=True):
 
     return ba, ca, angle, Tiv
 
-def get_shape_main(source_dir, fname, illustris=False, Rstar=None):
+def get_shape_main(source_dir, z, fname, illustris=False, Rstar=None):
     """
     Modified from:
     https://github.com/HongyuLi2016/illustris-tools/blob/435dceb93802547394b1257228c724b2a502d4cd/shape/illustris-get_shape.py#L25-L49
@@ -122,15 +122,13 @@ def get_shape_main(source_dir, fname, illustris=False, Rstar=None):
     """
     # set some things up
     if illustris:
-        z = illustris_snap2z['z'] # replaces snapznum output in Hongyu's code
         if Rstar is None:
             Rstar = np.arange(1, 101, 1)
     else:
-        z = tng_snap2z['z']
         if Rstar is None:
             Rstar = np.arange(20, 160, 10)
     # get some data
-    with open('%s/info.dat'%source_dir, 'rb') as f:
+    with open('%s/info.dat' % source_dir, 'rb') as f:
         info = pickle.load(f)
     pos = np.array(info['SubhaloPos']) / (1 + z) / h0
     # read in the coorinates

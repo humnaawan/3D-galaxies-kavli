@@ -9,7 +9,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from d3g2d import run_rf, readme as readme_obj, get_time_passed, rcparams
 for key in rcparams: mpl.rcParams[key] = rcparams[key]
 
-from helpers_data_readin import get_features_highres, get_features_lowres
+from helpers_summarydata_readin import get_features_highres, get_features_lowres
 # ------------------------------------------------------------------------------
 from optparse import OptionParser
 parser = OptionParser()

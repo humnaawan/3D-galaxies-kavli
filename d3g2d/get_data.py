@@ -5,7 +5,6 @@ import sys
 import time
 
 from .helpers_misc import get_time_passed, save_star_coords
-from .settings import illustris_snap2z, tng_snap2z
 
 __all__ = ['get_data']
 
@@ -53,7 +52,7 @@ def http_get(path, params=None, print_progress=True):
 
     return r
 # ------------------------------------------------------------------------------
-def get_data(run_name, z, haloIDs, outdir, print_progress=True, readme=None):
+def get_data(run_name, z, snap_num, haloIds, outdir, print_progress=True, readme=None):
     """
 
     This function reads in and saves the halo info and cutout.
@@ -62,7 +61,7 @@ def get_data(run_name, z, haloIDs, outdir, print_progress=True, readme=None):
     ------
     * run_name: str: either Illustris-1 or TNG-100
     * z: float: redshift of the halo
-    * haloIDs: list of int: list of haloIDs
+    * haloIds: list of int: list of haloIds
     * outdir: str: path to where the data should be stored.
     * print_progress (optional): bool
     * readme (optional): readme object or None
@@ -74,21 +73,15 @@ def get_data(run_name, z, haloIDs, outdir, print_progress=True, readme=None):
         raise ValueError('run_name must be either Illustris-1 or TNG100-1. Input: %s' % run_name)
     # set up
     current_dir = os.getcwd()
-    if run_name == 'Illustris-1':
-        z = illustris_snap2z['z']
-        snap = illustris_snap2z['snap']
-    else:
-        z = tng_snap2z['z']
-        snap = tng_snap2z['snap']
 
     params = {'stars' : 'Coordinates'}
     # --------------------------------------------------------------------------
-    for haloID in haloIDs:
+    for haloId in haloIds:
         start_time0 = time.time()
         # make the folder where to output things
-        out_folder = '%s/%s_halo%s_z%s' % (outdir, run_name, haloID, z)
+        out_folder = '%s/%s_halo%s_z%s' % (outdir, run_name, haloId, z)
         if readme is not None:
-            update = 'Getting data for haloID = %s\n' % (haloID)
+            update = 'Getting data for haloId = %s\n' % (haloId)
             update += 'Saving data in %s' % (out_folder.split(outdir)[-1])
             readme.update(to_write=update)
         # make the out folder
@@ -98,7 +91,7 @@ def get_data(run_name, z, haloIDs, outdir, print_progress=True, readme=None):
         # get halo info
         # --------------------------------------------------------------------------
         # based on https://github.com/HongyuLi2016/illustris-tools/blob/master/data/illustris-get_cutout.py
-        url = "%s/%s/snapshots/%s/subhalos/%s" % (base_url, run_name, snap, haloID)
+        url = "%s/%s/snapshots/%s/subhalos/%s" % (base_url, run_name, snap_num, haloId)
         if readme is not None:
             update = '\nGetting info from %s' % url
             readme.update(to_write=update)

@@ -11,7 +11,7 @@ do
         shape_datapath=${base_dir}'outputs/illustris_z0.4_shape'${rdecider}'/'
         outdir=${base_dir}'outputs/illustris_z0.4_3proj_shape'${rdecider}'_features/'
 
-        python /Users/humnaawan/repos/3D-galaxies-kavli/runscripts/get_features.py \
+        python /Users/humnaawan/repos/3D-galaxies-kavli/runscripts/get_features/get_features.py \
                         --summary_datapath=${summary_datapath} \
                         --shape_datapath=${shape_datapath} --outdir=${outdir} \
                         --data_tag=${proj} --summed_data --rdecider=${rdecider}

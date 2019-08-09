@@ -3,14 +3,27 @@ import numpy as np
 from d3g2d import get_data, get_time_passed, readme as readme_obj
 
 # ------------------------------------------------------------------------------
-path = '/Users/humnaawan/repos/3D-galaxies-kavli/data/illustris_mass_shape/mass-all-11p0/'
-z = 0.0
-snap_num = 135
-# get the haloIds
-haloIds = []
-for file in os.listdir(path):
-    haloIds.append( int( file.split('subhalo')[1].split('.dat')[0] ) )
-haloIds = np.unique( haloIds )
+illustris_z0 = False  # True for z=0.0 data; False for z=0.4 one
+# ------------------------------------------------------------------------------
+if illustris_z0:
+    path = '/Users/humnaawan/repos/3D-galaxies-kavli/data/illustris_mass_shape/mass-all-11p0/'
+    z = 0.0
+    snap_num = 135
+    # get the haloIds
+    haloIds = []
+    for file in os.listdir(path):
+        haloIds.append( int( file.split('subhalo')[1].split('.dat')[0] ) )
+    haloIds = np.unique( haloIds )
+else:
+    # get z=0.4 cutouts
+    path = '/Users/humnaawan/repos/3D-galaxies-kavli/data/sum_illustris/'
+    z = 0.4
+    snap_num = 108
+    # get the haloIds
+    haloIds = []
+    for file in os.listdir(path):
+        haloIds.append( int( file.split('_')[4] ) )
+    haloIds = np.unique( haloIds )
 
 # set up
 run_name = 'Illustris-1'

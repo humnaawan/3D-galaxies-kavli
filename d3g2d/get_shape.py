@@ -2,6 +2,7 @@ import pickle
 import numpy as np
 import numpy.linalg as LA
 import os
+import pandas as pd
 
 from .helpers_misc import read_cutout
 from .settings import h0
@@ -146,37 +147,39 @@ def get_shape_main(source_dir, z, fname, illustris=False, Rstar=None):
 
     return filename
 
-def get_shape_class(data_dir, shape_tag, startwith_tag='TNG', Rdecider=100):
-    shapes, haloIds = [], []
-    # loop over the local foders; each folder is for a specific halo
-    for i, folder in enumerate([f for f in os.listdir(data_dir) if f.startswith(startwith_tag)]):
-        # ---------------------------------------------------------------------
-        # now read in the data produced from my version
-        file = [ f for f in os.listdir('%s/%s' % (data_dir, folder)) if f.startswith(shape_tag)]
-        haloId =  int(folder.split('halo')[-1].split('_')[0])
-        if len(file) == 1:
-            file = file[0]
-            with open('%s/%s/%s' % (data_dir, folder, file), 'rb') as f:
-                data_now = pickle.load(f)
+def get_shape_class(outdir, shape_data_dict, axis_ratios_based, Rdecider, threshold_T=0.7):
+    # if axis_ratios_based = True: classification based on c/a, b/a
+    # otherwise based on triaxiality
+    # shape_data_dict should be a pandas dataframe
+    shape = np.array( ['undecided'] * len( shape_data_dict ) , dtype=str)
+    if axis_ratios_based:
+        arr_ba = shape_data_dict['b/a_%s' % Rdecider].values
+        arr_ca = shape_data_dict['c/a_%s' % Rdecider].values
 
-            ind = np.where( data_now['Rstar'] == Rdecider )[0]
-            if ( ( data_now['b/a'][ind] - data_now['c/a'][ind]) < 0.2 ) and (data_now['b/a'][ind] < 0.8):
-                shapes.append('P')
-            elif ( ( data_now['b/a'][ind] - data_now['c/a'][ind]) > 0.2 ) and (data_now['b/a'][ind] < 0.8):
-                shapes.append('T')
-            elif ( ( data_now['b/a'][ind] - data_now['c/a'][ind]) > 0.2 ) and (data_now['b/a'][ind] > 0.8):
-                shapes.append('O')
-            else:
-                shapes.append('S')
-            # append the id too
-            haloIds.append( haloId )
-        else:
-            raise ValueError('Somethings wrong: %s for halo %s' % ( file, haloId ) )
+        shape[:] = 'S'
+        # prolates
+        ind = np.where( (( arr_ba - arr_ca) < 0.2 ) & (arr_ba < 0.8 ) )[0]
+        shape[ind] = 'P'
+        # triaxials
+        ind = np.where( (( arr_ba - arr_ca) > 0.2 ) & (arr_ba < 0.8 ) )[0]
+        shape[ind] = 'T'
+        # oblates
+        ind = np.where( (( arr_ba - arr_ca) > 0.2 ) & (arr_ba > 0.8 ) )[0]
+        shape[ind] = 'O'
+    else:
+        shape[:] = 'Not-P'
+        arr_T = shape_data_dict['T_%s' % Rdecider].values
+        ind_prolate = np.where(  arr_T > threshold_T )[0]
+        shape[ind_prolate] = 'P'
+    # assemble a dataframe
+    data = pd.DataFrame( { 'shape%s_class' % Rdecider: shape,
+                          'haloId' : shape_data_dict['haloId'] } )
+    if axis_ratios_based:
+        tag = 'axis-ratios-based'
+    else:
+        tag = 'T-based_%sthres' % threshold_T
+    filename = 'shape%s_classes_%s_%shaloIds.csv' % (Rdecider, tag, len(shape_data_dict['haloId']) )
 
-    filename = 'shape%s_classes_%shaloIds.pickle' % (Rdecider, len(haloIds) )
-    rst = {'haloId': np.array( haloIds ),
-           'shape': np.array( shapes )
-           }
-    with open('%s/%s' % (data_dir, filename), 'wb') as f:
-        pickle.dump(rst, f)
+    data.to_csv('%s/%s' % (outdir, filename), index=False)
+
     return filename

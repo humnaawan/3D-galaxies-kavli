@@ -4,7 +4,7 @@ from matplotlib.lines import Line2D
 import datetime, time, socket, os
 import numpy as np, pickle
 from d3g2d import get_shape_main, readme as readme_obj, get_time_passed, rcparams
-from d3g2d import tng_snap2z, illustris_snap2z, summary_datapath, get_shape_class
+from d3g2d import get_shape_class
 for key in rcparams: mpl.rcParams[key] = rcparams[key]
 # ------------------------------------------------------------------------------
 from optparse import OptionParser
@@ -25,6 +25,11 @@ parser.add_option('--just_plots',
                   help="Just plot the figures; assume data is already saved.")
 parser.add_option('--rdecider', dest='Rdecider', default=100,
                   help='Radius to consider the shape at.')
+parser.add_option('--z', dest='z',
+                  help='Redshift.')
+parser.add_option('--extended_rstar',
+                  action='store_true', dest='extended_rstar', default=False,
+                  help="Consider a lot of Rstar values.")
 # ------------------------------------------------------------------------------
 (options, args) = parser.parse_args()
 data_dir = options.data_dir
@@ -33,6 +38,8 @@ test = options.test
 illustris = options.illustris
 just_plots = options.just_plots
 Rdecider = int( options.Rdecider )
+z = float( options.z )
+extended_rstar = options.extended_rstar
 # ------------------------------------------------------------------------------
 start_time0 = time.time()
 readme_tag = ''
@@ -44,36 +51,33 @@ readme = readme_obj(outdir=data_dir, readme_tag=readme_tag, first_update=update)
 readme.run()
 
 if test or illustris:
-    z = illustris_snap2z['z']
     sim_name = 'Illustris-1'
     if test:
         Rstar = np.arange(1, 101, 1)
-        haloIDs = [5, 16941]
-    else:
-        Rstar = np.hstack( [ np.arange(1, 101, 1), np.arange(110, 160, 10) ])
-        haloIDs = []
-        for f in [f for f in os.listdir( data_dir ) if f.startswith( sim_name )]:
-            haloIDs.append( int( f.split('halo')[1].split('_z')[0] ) )
-        haloIDs = haloIDs
+        haloIds = [5, 16941]
 else:
-    z = tng_snap2z['z']
     sim_name = 'TNG100-1'
-    haloIDs = []
-    for f in [f for f in os.listdir(summary_datapath) if f.startswith( sim_name ) ]:
-        haloIDs.append( int(f.split('_')[1]) )
-    Rstar = np.arange(20, 160, 10)
+
+if not test:
+    if extended_rstar:
+        Rstar = np.hstack( [ np.arange(1, 101, 1), np.arange(110, 160, 10) ])
+    else:
+        Rstar = np.arange(20, 160, 10)
+    # read in the haloIds
+    haloIds = np.genfromtxt( '%s/haloIds.txt'% data_dir , dtype=int)
+
 shape_tag = 'shape_%sRvals' % len( Rstar )
-readme.update(to_write='Working with %s galaxies for %s' % ( len(haloIDs), sim_name))
+readme.update(to_write='Working with %s galaxies for %s' % ( len(haloIds), sim_name))
 
 # run analysis to get axis ratios etc.
 if not just_plots:
-    for haloID in haloIDs:
+    for haloId in haloIds:
         start_time = time.time()
-        update = 'Getting shape data for halo %s'  % haloID
+        update = 'Getting shape data for halo %s'  % haloId
         readme.update(to_write=update)
         if not quiet: print(update)
-        filename = get_shape_main(source_dir='%s/%s_halo%s_z%s' % (data_dir, sim_name, haloID, z),
-                                  fname='cutout_%s.hdf5' % haloID,
+        filename = get_shape_main(source_dir='%s/%s_halo%s_z%s' % (data_dir, sim_name, haloId, z),
+                                  fname='cutout_%s.hdf5' % haloId, z=z,
                                   illustris=test or illustris, Rstar=Rstar)
         update = 'Saved %s\n' % filename
         update += '## Time taken: %s\n'%get_time_passed(start_time)
@@ -304,5 +308,5 @@ plt.savefig('%s/%s'%(fig_dir, filename), format='png',
 plt.close('all')
 readme.update(to_write='Saved %s\n' % filename)
 
-update = 'Done.\n## Time taken: %s\n'%get_time_passed(start_time0)
+update = 'Done.\n## Time taken: %s\n' % get_time_passed(start_time0)
 readme.update(to_write=update)

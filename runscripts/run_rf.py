@@ -278,7 +278,17 @@ if plot_feature_dists:
             plt.close('all')
             readme.update(to_write='Saved %s' % filename)
 # ------------------------------------------------------------------------------
-# run random forest
+# save data
+fname = 'feats.csv'
+feats.to_csv('%s/%s' % (outdir, fname), index=False)
+
+fname = 'targets.csv'
+shape_data.to_csv('%s/%s' % (outdir, fname), index=False)
+
+fname = 'haloids.csv'
+hids = pd.DataFrame({'haloId': haloIds})
+hids.to_csv('%s/%s' % (outdir, fname), index=False)
+
 run_rf(feats=feats.values, feat_labels=feats.keys(),
        targets=shape_data.values, target_labels=shape_data.keys(),
        outdir=outdir, regression=regress, readme=readme)

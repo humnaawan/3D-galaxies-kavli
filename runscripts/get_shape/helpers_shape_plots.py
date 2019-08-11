@@ -74,6 +74,7 @@ def plot_shape_trends(outdir, data_dir, sim_name, shape_tag, Rdecider,
     axes1[1].set_ylabel('c/a')
     axes1[2].set_ylabel('T')
     axes1[2].set_xlabel('R (kpc)')
+    for i in range(3): axes1[i].set_ylim(0, 1)
     fig1.set_size_inches(15, 15)
     # add legend
     custom_lines, class_labels = [], []
@@ -95,6 +96,7 @@ def plot_shape_trends(outdir, data_dir, sim_name, shape_tag, Rdecider,
     axes2[1].set_ylabel(r'$\Delta$ c/a')
     axes2[2].set_ylabel(r'$\Delta$ T')
     axes2[2].set_xlabel('R (kpc)')
+    for i in range(3): axes2[i].set_ylim(-0.25, 0.25)
     fig2.set_size_inches(15, 15)
     # add legend
     axes2[0].legend(custom_lines, class_labels,

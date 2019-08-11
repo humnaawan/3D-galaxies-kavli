@@ -7,7 +7,7 @@ import numpy as np, pickle
 import pandas as pd
 from d3g2d import get_shape_main, readme as readme_obj, get_time_passed
 from d3g2d import get_shape_class
-from helpers_shape_plotsimport plot_shape_trends, plot_axis_ratios
+from helpers_shape_plots import plot_shape_trends, plot_axis_ratios
 # ------------------------------------------------------------------------------
 from optparse import OptionParser
 parser = OptionParser()

@@ -45,7 +45,7 @@ data_tag = '_%s_%s_shape%s' % ( res_tag, data_tag, Rdecider )
 summed_data = options.summed_data
 # check to ensure outdir exists
 os.makedirs(outdir, exist_ok=True)
-print(outdir)
+print('outdir: %s' % outdir)
 # ------------------------------------------------------------------------------
 start_time = time.time()
 readme_tag = ''
@@ -111,7 +111,15 @@ update = summary_data_plots(outdir=fig_dir, summary_datapath=summary_datapath,
                             shape_class_data=shape_class_data,
                             colors_dict=colors_dict,
                             classtag_to_classname=classtag_to_classname,
-                            class_tag=class_tag, summed_data=summed_data)
+                            class_tag=class_tag, summed_data=summed_data, mass_cut=False)
+readme.update(to_write=update)
+update = summary_data_plots(outdir=fig_dir, summary_datapath=summary_datapath,
+                            Rdecider=Rdecider,
+                            shape_class_data=shape_class_data,
+                            colors_dict=colors_dict,
+                            classtag_to_classname=classtag_to_classname,
+                            class_tag=class_tag, summed_data=summed_data,
+                            mass_cut=True, mass_thresh=11.4)
 readme.update(to_write=update)
 
 shape_class_arr = shape_class_data['shape%s_class' % Rdecider].values
@@ -142,7 +150,15 @@ update = summary_data_plots(outdir=fig_dir, summary_datapath=summary_datapath,
                             shape_class_data=shape_class_data,
                             colors_dict=colors_dict,
                             classtag_to_classname=classtag_to_classname,
-                            class_tag=class_tag, summed_data=summed_data)
+                            class_tag=class_tag, summed_data=summed_data, mass_cut=False)
+readme.update(to_write=update)
+update = summary_data_plots(outdir=fig_dir, summary_datapath=summary_datapath,
+                            Rdecider=Rdecider,
+                            shape_class_data=shape_class_data,
+                            colors_dict=colors_dict,
+                            classtag_to_classname=classtag_to_classname,
+                            class_tag=class_tag, summed_data=summed_data,
+                            mass_cut=True, mass_thresh=11.4)
 readme.update(to_write=update)
 
 shape_class_arr = shape_class_data['shape%s_class' % Rdecider].values

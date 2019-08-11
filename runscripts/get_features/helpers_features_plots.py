@@ -14,7 +14,7 @@ __all__ = ['summary_data_plots', 'plot_hongyus_analog', 'plot_highd_data']
 
 def summary_data_plots(outdir, summary_datapath, Rdecider,
                       shape_class_data, colors_dict, classtag_to_classname,
-                      class_tag, summed_data):
+                      class_tag, summed_data, mass_cut=False, mass_thresh=11.4):
     if class_tag != '' and class_tag is not None: class_tag = '_%s' % class_tag
     # read in one data set to figure things out
     haloId = shape_class_data['haloId'][0]
@@ -61,9 +61,12 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
     plt.subplots_adjust(wspace=0.3, hspace=0.2, top=0.9)
 
     alpha = 0.3
+    shape_class_data['shape%s_class' % Rdecider] = np.array(shape_class_data['shape%s_class' % Rdecider])
+
     # also plot the axis ratios
     counters = {}
     for key in colors_dict: counters[key] = 0
+    gal_count = 0
     # loop over the halos
     for i, haloId in enumerate(shape_class_data['haloId']):
         filename = [f for f in os.listdir(summary_datapath) if f.__contains__('_%s_'%haloId)]
@@ -73,25 +76,52 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
         data = np.load('%s/%s' % (summary_datapath, filename))
         if summed_data:
             data = data[()]
-        # find the shape
-        shape_class = np.array(shape_class_data['shape%s_class' % Rdecider])[i]
-        # add to the right counter
-        counters[shape_class] += 1
-        # plot _shape related things
-        for j, key in enumerate( toplot_pixshape ):
-            axes1[j].plot( data['rkpc_shape'], data[key], '.-',
-                          alpha=alpha, color=colors_dict[shape_class])
-        # plot _prof related things
-        for j, key in enumerate( toplot_pixsprof ):
-            axes2[j].plot( data['rkpc_prof'], data[key], '.-',
-                          alpha=alpha, color=colors_dict[shape_class])
-        # plot logm
-        if summed_data: mass_key = 'aper_maper'
-        else: mass_key = 'aper_logms'
-        axes3.plot( data['aper_rkpc'], data[mass_key], '.-',
-                   alpha=alpha, color=colors_dict[shape_class])
+            mass_key = 'aper_maper'
+            data['aper_maper'] = np.log10( data['aper_maper'] )
+        else:
+            mass_key = 'aper_logms'
+
+        # check if need to implement a mass cut
+        if mass_cut:
+            # check ~ logm30
+            rthres = data['aper_rkpc'][-6]
+            del_mass = 0.1
+            if ( ( data[mass_key][-6] >= mass_thresh - del_mass ) and \
+                           ( data[mass_key][-6] <= mass_thresh + del_mass  ) ):
+                plot = True
+            else:
+                plot = False
+        else:
+            plot = True
+        # plot
+        if plot:
+            gal_count += 1
+            # see if need to implement a mass cut
+            # find the shape
+            shape_class = shape_class_data['shape%s_class' % Rdecider][i]
+            # add to the right counter
+            counters[shape_class] += 1
+            # plot _shape related things
+            for j, key in enumerate( toplot_pixshape ):
+                axes1[j].plot( data['rkpc_shape'], data[key], '.-',
+                              alpha=alpha, color=colors_dict[shape_class])
+            # plot _prof related things
+            for j, key in enumerate( toplot_pixsprof ):
+                axes2[j].plot( data['rkpc_prof'], data[key], '.-',
+                              alpha=alpha, color=colors_dict[shape_class])
+            # plot logm
+            axes3.plot( data['aper_rkpc'], data[mass_key], '.-',
+                       alpha=alpha, color=colors_dict[shape_class])
     # plot details
-    axes1[0].set_title('Total: %s galaxies' % (i+1) )
+    # set title
+    tag = ''
+    if mass_cut:
+        tag = ' (%.2f%% of total)' % ( gal_count/(i+1) * 100)
+    axes1[0].set_title('Total: %s galaxies%s' % (gal_count, tag) )
+    axes2[0].set_title('Total: %s galaxies%s' % (gal_count, tag) )
+    axes3.set_title('Total: %s galaxies%s' % (gal_count, tag) )
+
+    # axis labels
     for j, key in enumerate( toplot_pixshape ):
         axes1[j].set_ylabel( key )
         if key.__contains__('mu_') or key.__contains__('maper'):
@@ -103,10 +133,20 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
         if key.__contains__('mu_') or key.__contains__('maper'):
             axes2[j].set_yscale('log')
     axes2[-1].set_xlabel( 'rkpc_prof' )
-    if summed_data:
-        axes3.set_yscale('log')
+
     axes3.set_ylabel(mass_key)
     axes3.set_xlabel('aper_rkpc')
+
+    tag = ''
+    if mass_cut:
+        title = r'%.2f $\leq$ logM%.2f $\leq$ %.2f; $\Delta$M: %s' % (mass_thresh - del_mass,
+                                                                      rthres,
+                                                                      mass_thresh + del_mass,
+                                                                      del_mass)
+        fig1.suptitle(title, fontsize=16, y=0.94, fontweight='bold')
+        fig2.suptitle(title, fontsize=16, y=0.92, fontweight='bold')
+        fig3.suptitle(title, fontsize=16, y=1.1, fontweight='bold')
+        tag = '_mass-cut-%s' % mass_thresh
 
     # add legend
     custom_lines, class_labels = [], []
@@ -117,21 +157,21 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
     axes2[0].legend(custom_lines, class_labels, loc='best', frameon=True)
     axes3.legend(custom_lines, class_labels, loc='best', frameon=True)
     # save figure
-    filename = 'rshape_profiles_%sgals_shape%s%s.png' % (i+1, Rdecider, class_tag)
+    filename = 'rshape_profiles_%sgals_shape%s%s%s.png' % (gal_count, Rdecider, class_tag, tag)
     fig1.savefig('%s/%s' % (outdir, filename), format='png',
                  bbox_inches='tight')
     plt.close(fig1)
     update = 'Saved %s\n' % filename
 
     # save figure
-    filename = 'rprof_profiles_%sgals_shape%s%s.png' % (i+1, Rdecider, class_tag)
+    filename = 'rprof_profiles_%sgals_shape%s%s%s.png' % (gal_count, Rdecider, class_tag, tag)
     fig2.savefig('%s/%s' % (outdir, filename), format='png',
                  bbox_inches='tight')
     plt.close(fig2)
     update += 'Saved %s\n' % filename
 
     # save figure
-    filename = 'aper_profiles_%sgals_shape%s%s.png' % (i+1, Rdecider, class_tag)
+    filename = 'aper_profiles_%sgals_shape%s%s%s.png' % (gal_count, Rdecider, class_tag, tag)
     fig3.savefig('%s/%s' % (outdir, filename), format='png',
                  bbox_inches='tight')
     plt.close(fig3)
@@ -173,10 +213,10 @@ def plot_hongyus_analog(outdir, logmass, shape_class_arr, Rdecider, class_tag, m
                     Line2D([0], [0], color='b', lw=2),
                     Line2D([0], [0], color='k', lw=2)]
     plt.legend(custom_lines,
-               ['Prolate normed density (N=%s)' % len(ind1),
-                'Not-Prolate normed density (N=%s)' % len(ind2),
+               ['Prolate Counts (N=%s)' % len(ind1),
+                'Not-Prolate Counts (N=%s)' % len(ind2),
                 'Prolate Fraction'],
-               bbox_to_anchor=(1.6,1), frameon=True)
+               bbox_to_anchor=(1.5,1), frameon=True)
     # save plot
     filename = 'hongyu_analog_%sgals_shape%s%s_%s.png' % (len(logmass), Rdecider, class_tag, mass_tag)
     plt.savefig('%s/%s'%(outdir, filename), format='png',

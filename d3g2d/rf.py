@@ -106,7 +106,9 @@ def run_rf(feats, feat_labels, targets, target_labels, outdir,
     # Fit the random search model
     rf_random.fit(x_train, y_train)
     update = 'Best params: %s\n' % rf_random.best_params_
-    update += '\nCV results: %s\n' % rf_random.cv_results_
+    update += '\nCV results:\n'
+    for key in [f for f in rf_random.cv_results_ if f.__contains__('score') and not f.__contains__('time')]:
+        update += '%s: %s\n' % ( key, list( rf_random.cv_results_[key] ) )
 
     ## cross-validation
     kfold = KFold(n_splits=10, random_state=42)
@@ -114,6 +116,44 @@ def run_rf(feats, feat_labels, targets, target_labels, outdir,
     update += '\n# cross val score: accuracy: %0.2f (+/- %0.2f)' % (scores.mean(), scores.std() * 2)
     if readme is not None:
         readme.update(to_write=update)
+
+    # lets make a plot of the cv results
+    plt.clf()
+    for key in [f for f in rf_random.cv_results_ if f.__contains__('score') and \
+                not f.__contains__('time') and \
+                f.__contains__('split')]:
+        plt.plot( rf_random.cv_results_[key], '.', label=key )
+    niter = len(rf_random.cv_results_[key])
+    plt.errorbar(range( niter ),
+                 rf_random.cv_results_['mean_test_score'], fmt='o', color='k',
+                 yerr=rf_random.cv_results_['std_test_score'], label='mean + std')
+    plt.xlabel( 'niter' )
+    plt.ylabel( 'CV scores' )
+    plt.legend(bbox_to_anchor=(1,1))
+    ax1 = plt.gca()
+    ax1.set_xlim(-1, niter+1)
+
+    ax1.set_xticks( range(niter) )
+    ax1.set_xticklabels( range(niter) )
+    ax1.tick_params(axis='x', labelsize=8)
+    ax2 = ax1.twiny()
+    ax2.set_xlim(-1, niter+1)
+    ax2.set_xticks( ax1.get_xticks() )
+    ax2.set_xticklabels( rf_random.cv_results_['rank_test_score'] )
+    ax2.tick_params(axis='x', labelsize=8)
+    ax2.grid( None )
+    ax2.set_xlabel('rank test score')
+    plt.gcf().set_size_inches(25, 8)
+    filename = 'plot_cv_scores.png'
+    # save file
+    plt.savefig('%s/%s'%(outdir, filename), format='png',
+                bbox_inches='tight')
+    plt.close('all')
+    update = 'Saved %s' % filename
+    if readme is not None:
+        readme.update(to_write=update)
+
+
     # evaluate model
     model = rf_random.best_estimator_
     # fit the model to training set first

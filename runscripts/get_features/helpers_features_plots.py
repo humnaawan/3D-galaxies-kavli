@@ -39,18 +39,29 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
     toplot_pixsprof = [f for f in data.keys() if f.endswith('prof') \
                        and not f.__contains__('err') \
                        and not f.__contains__('output') \
+                       and not f.startswith('a') \
+                       and not f.startswith('b') \
                        and not f.__contains__('rpix_prof') \
                        and not f.__contains__('rkpc_prof')
                        ]
 
     print('\nPlotting rpix_prof vs. %s' % toplot_pixsprof)
 
+    toplot_pixsprof_2nd_order = [f for f in data.keys() if f.endswith('prof') \
+                                and ( f.startswith('a') or f.startswith('b') ) \
+                                and not f.__contains__('err') \
+                                and not f.__contains__('rpix_prof') \
+                                and not f.__contains__('rkpc_prof')
+                                ]
+
+    print('\nPlotting rpix_prof vs. %s' % toplot_pixsprof_2nd_order)
+
     # figure for the rpix_shape plot
     nrows, ncols = len(toplot_pixshape), 1
     fig1, axes1 = plt.subplots(nrows, ncols)
     fig1.set_size_inches(15, 5 * nrows)
     plt.subplots_adjust(wspace=0.3, hspace=0.2, top=0.9)
-    # figure for the rpix_prof plot
+    # figure for the rpix_prof plot; no 2nd order moments
     nrows, ncols = len(toplot_pixsprof), 1
     fig2, axes2 = plt.subplots(nrows, ncols)
     fig2.set_size_inches(15, 5 * nrows)
@@ -59,6 +70,14 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
     fig3, axes3 = plt.subplots(1, 1)
     fig3.set_size_inches(10, 5)
     plt.subplots_adjust(wspace=0.3, hspace=0.2, top=0.9)
+    # plot 2nd order moments, if any
+    plot_2nd_order = False
+    if len(toplot_pixsprof_2nd_order) > 0:
+        plot_2nd_order = True
+        nrows, ncols = len(toplot_pixsprof_2nd_order), 1
+        fig4, axes4 = plt.subplots(nrows, ncols)
+        fig4.set_size_inches(15, 5 * nrows)
+        plt.subplots_adjust(wspace=0.3, hspace=0.2, top=0.9)
 
     alpha = 0.3
     shape_class_data['shape%s_class' % Rdecider] = np.array(shape_class_data['shape%s_class' % Rdecider])
@@ -103,50 +122,52 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
             counters[shape_class] += 1
             # plot _shape related things
             for j, key in enumerate( toplot_pixshape ):
-                axes1[j].plot( data['rkpc_shape'], data[key], '.-',
+                axes1[j].plot( data['rkpc_shape'] ** 0.25, data[key], '.-',
                               alpha=alpha, color=colors_dict[shape_class])
             # plot _prof related things
             for j, key in enumerate( toplot_pixsprof ):
-                axes2[j].plot( data['rkpc_prof'], data[key], '.-',
+                axes2[j].plot( data['rkpc_prof'] ** 0.25, data[key], '.-',
                               alpha=alpha, color=colors_dict[shape_class])
+            if plot_2nd_order:
+                for j, key in enumerate( toplot_pixsprof_2nd_order ):
+                    axes4[j].plot( data['rkpc_prof'], data[key], '.-',
+                                  alpha=alpha, color=colors_dict[shape_class])
             # plot logm
             axes3.plot( data['aper_rkpc'], data[mass_key], '.-',
                        alpha=alpha, color=colors_dict[shape_class])
     # plot details
-    # set title
-    tag = ''
+    tag = ''  # for the filename
+    title = ''
     if mass_cut:
-        tag = ' (%.2f%% of total)' % ( gal_count/(i+1) * 100)
-    axes1[0].set_title('Total: %s galaxies%s' % (gal_count, tag) )
-    axes2[0].set_title('Total: %s galaxies%s' % (gal_count, tag) )
-    axes3.set_title('Total: %s galaxies%s' % (gal_count, tag) )
-
+        title += r'%.2f $\leq$ logM%.2f $\leq$ %.2f; $\Delta$M: %s' % (mass_thresh - del_mass,
+                                                                       rthres,
+                                                                       mass_thresh + del_mass,
+                                                                       del_mass)
+        title += '\n\n'
+        tag = '_mass-cut-%s' % mass_thresh
+    percent_tag = ''
+    if mass_cut:
+        percent_tag = ' (%.2f%% of total)' % ( gal_count/(i+1) * 100)
+    title += 'Total: %s galaxies%s' % (gal_count, percent_tag)
+    # set title
+    axes1[0].set_title( title )
+    axes2[0].set_title( title )
+    axes3.set_title( title )
     # axis labels
     for j, key in enumerate( toplot_pixshape ):
         axes1[j].set_ylabel( key )
         if key.__contains__('mu_') or key.__contains__('maper'):
             axes1[j].set_yscale('log')
-    axes1[-1].set_xlabel( 'rkpc_shape' )
+    axes1[-1].set_xlabel( r'( rkpc_shape )$^{1/4}$' )
     #
     for j, key in enumerate( toplot_pixsprof ):
         axes2[j].set_ylabel( key )
         if key.__contains__('mu_') or key.__contains__('maper'):
             axes2[j].set_yscale('log')
-    axes2[-1].set_xlabel( 'rkpc_prof' )
+    axes2[-1].set_xlabel( r' ( rkpc_prof )$^{1/4}$' )
 
     axes3.set_ylabel(mass_key)
     axes3.set_xlabel('aper_rkpc')
-
-    tag = ''
-    if mass_cut:
-        title = r'%.2f $\leq$ logM%.2f $\leq$ %.2f; $\Delta$M: %s' % (mass_thresh - del_mass,
-                                                                      rthres,
-                                                                      mass_thresh + del_mass,
-                                                                      del_mass)
-        fig1.suptitle(title, fontsize=16, y=0.94, fontweight='bold')
-        fig2.suptitle(title, fontsize=16, y=0.92, fontweight='bold')
-        fig3.suptitle(title, fontsize=16, y=1.1, fontweight='bold')
-        tag = '_mass-cut-%s' % mass_thresh
 
     # add legend
     custom_lines, class_labels = [], []
@@ -176,6 +197,19 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
                  bbox_inches='tight')
     plt.close(fig3)
     update += 'Saved %s\n' % filename
+
+    if plot_2nd_order:
+        axes4[0].set_title( title )
+        for j, key in enumerate( toplot_pixsprof_2nd_order ):
+            axes4[j].set_ylabel( key )
+        axes4[-1].set_xlabel( 'rkpc_prof' )
+        axes4[0].legend(custom_lines, class_labels, loc='best', frameon=True)
+        # save plot
+        filename = 'rprof_profiles_2ndorder_%sgals_shape%s%s%s.png' % (gal_count, Rdecider, class_tag, tag)
+        fig4.savefig('%s/%s' % (outdir, filename), format='png',
+                     bbox_inches='tight')
+        plt.close(fig4)
+        update += 'Saved %s\n' % filename
 
     return update
 

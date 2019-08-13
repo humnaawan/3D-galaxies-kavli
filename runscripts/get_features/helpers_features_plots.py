@@ -249,8 +249,8 @@ def plot_hongyus_analog(outdir, logmass, shape_class_arr, Rdecider, class_tag, m
     plt.legend(custom_lines,
                ['Prolate Counts (N=%s)' % len(ind1),
                 'Not-Prolate Counts (N=%s)' % len(ind2),
-                'Prolate Fraction'],
-               bbox_to_anchor=(1.5,1), frameon=True)
+                'Prolate Fraction'], ncol=3,
+               bbox_to_anchor=(1.15,1.15), frameon=True)
     # save plot
     filename = 'hongyu_analog_%sgals_shape%s%s_%s.png' % (len(logmass), Rdecider, class_tag, mass_tag)
     plt.savefig('%s/%s'%(outdir, filename), format='png',

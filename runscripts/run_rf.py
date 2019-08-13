@@ -211,7 +211,7 @@ if plot_feature_dists:
             axes[-1].set_xlabel(col)
             for row in range( nrows ):
                 axes[row].set_ylabel('Counts')
-                axes[row].legend( bbox_to_anchor=(1,1) )
+                axes[row].legend( loc='upper left' ) #bbox_to_anchor=(1,1) )
             axes[0].set_title( 'all' )
             for i, proj in enumerate( feats_proj.keys() ):
                 axes[i+1].set_title( proj )
@@ -240,7 +240,7 @@ if plot_feature_dists:
                 plt.hist( data[ind], bins=bins, lw=2, histtype='step', label=shape_class )
             plt.xlabel(col)
             plt.ylabel('Counts')
-            plt.legend( bbox_to_anchor=(1,1) )
+            plt.legend( loc='upper left' )
             filename = 'plot_dist_%s.png' % (col)
             # save file
             plt.savefig('%s/%s'%(fig_dir, filename), format='png',
@@ -259,13 +259,43 @@ fname = 'haloids.csv'
 hids = pd.DataFrame({'haloId': haloIds})
 hids.to_csv('%s/%s' % (outdir, fname), index=False)
 
-# run random forest
+# ------------------------------------------------------------------------------
+# run random forest with all features.
+# make the outdir for this run if it doesn't exist
+subdir = '%s/run_rf_all_feats' % outdir
+os.makedirs(subdir, exist_ok=True)
+# update
+update = '\n## Running run_rf with %s features ... '  % len(feats)
+update += '\noutdir: %s ' % subdir.split(outdir)[-1]
+readme.update(to_write=update)
+# now run the analysis
+n_feats_to_return = 15
+top_feats = run_rf(feats=feats.values, feat_labels=feats.keys(),
+                   targets=shape_data.values, target_labels=shape_data.keys(),
+                   outdir=subdir, regression=regress, readme=readme,
+                   n_feats_to_return=n_feats_to_return)
+readme.update(to_write='\n## Time taken: %s\n' % get_time_passed(start_time))
+
+# ------------------------------------------------------------------------------
+# now down select the feature sample
+for key in feats:
+    if key not in top_feats:
+        readme.update(to_write='Removing %s from features' % key)
+        _ = feats.pop(key)
+# re-run the rf
+subdir = '%s/run_rf_top-%s_feats' % ( outdir, n_feats_to_return )
+os.makedirs(subdir, exist_ok=True)
+# update
+update = '\n## Running run_rf with top-%s features ... features include:\n%s\n'  % ( len(feats), feats.keys() )
+update += '\noutdir: %s ' % subdir.split(outdir)[-1]
+readme.update(to_write=update)
+
+# now run the analysis
 run_rf(feats=feats.values, feat_labels=feats.keys(),
        targets=shape_data.values, target_labels=shape_data.keys(),
-       outdir=outdir, regression=regress, readme=readme)
-update = '\n## Time taken: %s'%get_time_passed(start_time)
-readme.update(to_write=update)
-print(update)
+       outdir=subdir, regression=regress, readme=readme,
+       n_feats_to_return=None)
+readme.update(to_write='\n## Time taken: %s\n' % get_time_passed(start_time))
 
 update = 'Done.\n## Time taken: %s\n'%get_time_passed(start_time0)
 readme.update(to_write=update)

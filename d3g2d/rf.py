@@ -183,14 +183,19 @@ def run_rf(feats, feat_labels, targets, target_labels, outdir,
     if n_feats_to_return is not None and (n_feats_to_return > 0) :
         n_feats_to_return = int( n_feats_to_return )
         if readme is not None:
-            readme.update(to_write='Returning top-%s features.\n' % n_feats_to_return )
+            readme.update(to_write='Returning top %s features.\n' % n_feats_to_return )
         # access top <n_feats_to_return> features to return.
         f = dict(zip(feat_labels, np.array(model.feature_importances_)))
         ordered_feats = sorted( f.items(), key=operator.itemgetter(1) )
         # separate out the feature labels
         feats = []
+        update = ''
         for i in ordered_feats[-n_feats_to_return:]:
             feats += [ i[0] ]
+            update += '%s: %.2f\n' % (i[0], i[1])
+
+        if readme is not None:
+            readme.update(to_write=update )
         return np.array(feats)
     else:
         return

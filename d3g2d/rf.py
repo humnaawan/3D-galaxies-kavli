@@ -39,6 +39,33 @@ def run_rf(feats, feat_labels, targets, target_labels, outdir,
     x_train, x_test, y_train, y_test = train_test_split(feats, targets,
                                                         test_size=0.33,
                                                         random_state=42)
+    arr = np.array( y_train )
+    all_tot = len( arr )
+    update = '## %s objects in train set\n' % all_tot
+    if encoder is None:
+        targets_ = arr
+    else:
+        targets_ = encoder.inverse_transform( arr )
+
+    for target in np.unique( targets_ ):
+        tot_target = len( np.where( targets_ == target)[0] )
+        update += '%s of %s (%.2f%% of total)\n' % (tot_target, target, 100 * tot_target/all_tot)
+
+    arr = np.array( y_test )
+    all_tot = len(arr)
+    update += '\n## %s objects in test set\n' % all_tot
+    if encoder is None:
+        targets_ = arr
+    else:
+        targets_ = encoder.inverse_transform(arr)
+
+    print(np.unique( targets_ ))
+    for target in np.unique( targets_ ):
+        tot_target = len( np.where( targets_ == target)[0] )
+        update += '%s of %s (%.2f%% of total)\n' % (tot_target, target, 100 * tot_target/all_tot)
+
+    if readme is not None:
+        readme.update(to_write=update)
     # adapting https://towardsdatascience.com/hyperparameter-tuning-the-random-forest-in-python-using-scikit-learn-28d2aa77dd74
     # to find the best params.
     # ----------------------------------------------------------------------------

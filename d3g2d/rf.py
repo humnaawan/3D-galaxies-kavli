@@ -4,6 +4,7 @@ import pickle
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import operator
+import scikitplot as skplt
 from sklearn.model_selection import train_test_split, KFold, cross_val_score
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.model_selection import RandomizedSearchCV
@@ -264,6 +265,7 @@ def evaluate_model(model, x_arr, y_arr, save_plot, feat_labels, target_labels,
         raise ValueError('Must specify outdir is want to save plots.')
 
     if data_label is None: data_label = ''
+    if data_label != '': data_label = '_%s' % data_label
     # predict
     y_pred = model.predict(x_arr)
     # see how well the model is working.
@@ -281,6 +283,7 @@ def evaluate_model(model, x_arr, y_arr, save_plot, feat_labels, target_labels,
     update += '#####################################\n'
     if readme is not None:
         readme.update(to_write=update)
+
     # plot more test; need to invert one hot encoding
     if regression:
         if len( np.shape(y_pred) ) == 1:
@@ -319,7 +322,6 @@ def evaluate_model(model, x_arr, y_arr, save_plot, feat_labels, target_labels,
                 axes[row].set_ylabel('predicted')
 
         if save_plot:
-            if data_label != '': data_label = '_%s' % data_label
             # set up filename
             filename = 'plot_scatter_%s%s.png' % (label, data_label)
             # save file
@@ -352,4 +354,87 @@ def evaluate_model(model, x_arr, y_arr, save_plot, feat_labels, target_labels,
 
         if readme is not None:
             readme.update(to_write=update)
+
+        # plot histogram of probabilties
+        ntargets = len( target_labels )
+        bins = np.arange(-0.1, 1.2, 0.05)
+        y_pred_ = np.array( y_pred_ )
+
+        plt.clf()
+        nrows, ncols = ntargets, 1
+        fig, axes = plt.subplots(nrows, ncols)
+        plt.subplots_adjust(wspace=0.3, hspace=0.3, top=0.9)
+
+        for j, target in enumerate( np.unique( y_pred_ ) ):
+            ind = np.where( y_pred_ == target )[0]
+
+            for i in range(ntargets):
+                axes[j].hist(  y_pred[ind, i], bins=bins, lw=2,
+                             histtype='step', label='prob to be %s' % target_labels[i] )
+
+        for i in range(nrows):
+            axes[i].set_ylabel('Counts')
+            axes[i].legend(bbox_to_anchor=(1,1))
+            axes[i].set_title('Predicted %s' % target_labels[i])
+        axes[-1].set_xlabel('Prob')
+
+        if save_plot:
+            # set up filename
+            filename = 'plot_prob-hist%s.png' % (data_label)
+            # save file
+            plt.savefig('%s/%s'%(outdir, filename), format='png',
+                        bbox_inches='tight')
+            plt.close('all')
+            update = 'Saved %s' % filename
+            if readme is not None:
+                readme.update(to_write=update)
+        else:
+            plt.show()
+
+        # plot ROC curve
+        plt.clf()
+        skplt.metrics.plot_roc_curve(y_arr_, y_pred,
+                                     curves=('each_class')
+                                     )
+        ax = plt.gca()
+        ax.legend(loc='best', fontsize=rcparams['legend.fontsize'])
+        ax.tick_params(axis='both', which='major',
+                       labelsize=rcparams['xtick.labelsize'],
+                       width=rcparams['xtick.major.width']
+                       )
+        if save_plot:
+            # set up filename
+            filename = 'plot_roc%s.png' % (data_label)
+            # save file
+            plt.savefig('%s/%s'%(outdir, filename), format='png',
+                        bbox_inches='tight')
+            plt.close('all')
+            update = 'Saved %s' % filename
+            if readme is not None:
+                readme.update(to_write=update)
+        else:
+            plt.show()
+
+        # plot ROC curve
+        plt.clf()
+        skplt.metrics.plot_precision_recall_curve(y_arr_, y_pred, curves=('each_class'))
+        ax = plt.gca()
+        ax.legend(loc='best', fontsize=rcparams['legend.fontsize'])
+        ax.tick_params(axis='both', which='major',
+                       labelsize=rcparams['xtick.labelsize'],
+                       width=rcparams['xtick.major.width']
+                       )
+        if save_plot:
+            # set up filename
+            filename = 'plot_precision_recall%s.png' % (data_label)
+            # save file
+            plt.savefig('%s/%s'%(outdir, filename), format='png',
+                        bbox_inches='tight')
+            plt.close('all')
+            update = 'Saved %s' % filename
+            if readme is not None:
+                readme.update(to_write=update)
+        else:
+            plt.show()
+
     return y_pred

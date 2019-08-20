@@ -18,10 +18,12 @@ def plot_confusion_matrix(y_true, y_pred, classes, normalize, save_plot,
         raise ValueError('Must specify outdir to save plot.')
     # set up the title
     if fig_label is None: fig_label = ''
+    if fig_label.startswith('_'): title_label = fig_label[1:]
+    else: title_label = fig_label
     if normalize:
-        title = 'Normalized confusion matrix\n%s' % fig_label
+        title = 'Normalized confusion matrix\n%s' % title_label
     else:
-        title = '(Unnormalized) Confusion matrix\n%s' % fig_label
+        title = '(Unnormalized) Confusion matrix\n%s' % title_label
 
     # Compute confusion matrix
     cm = confusion_matrix(y_true, y_pred)
@@ -38,7 +40,10 @@ def plot_confusion_matrix(y_true, y_pred, classes, normalize, save_plot,
     cmap = plt.cm.Blues
     plt.clf()
     fig, ax = plt.subplots()
-    im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
+    if normalize:
+        im = ax.imshow(cm, interpolation='nearest', cmap=cmap, vmin=0, vmax=1)
+    else:
+        im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
     ax.figure.colorbar(im, ax=ax)
     # show all ticks...
     ax.set(xticks=np.arange(cm.shape[1]),
@@ -56,7 +61,6 @@ def plot_confusion_matrix(y_true, y_pred, classes, normalize, save_plot,
                     color="white" if cm[i, j] > thresh else "black")
     fig.tight_layout()
     if save_plot:
-        if fig_label != '': fig_label = '_%s' % fig_label
         if normalize: tag = 'normed'
         else: tag = 'unnormed'
         # set up filename

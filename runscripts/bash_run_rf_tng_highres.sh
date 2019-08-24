@@ -2,10 +2,11 @@
 
 base_dir='/Users/humnaawan/repos/3D-galaxies-kavli/outputs/'
 # ------------------------------------------------------------------------------
-regress_wT_noa1a4=1
-classify_wT_noa1a4=1
-regress_wabc_noa1a4=1
-classify_wabc_noa1a4=1
+regress_wT_noa1a4=0
+classify_wT_noa1a4=0
+regress_wabc_noa1a4=0
+classify_wabc_noa1a4=0
+classify_wfe_noa1a4=1
 # ------------------------------------------------------------------------------
 # run  analysis for one projection;
 rdecider=50
@@ -72,4 +73,19 @@ then
                   --outdir=${outdir} --high_res --plot_feature_dists \
                   --no_2nd_order_feats --good_radius_feats \
                   --rdecider=${rdecider}
+fi
+
+# ------------------------------------------------------------------------------
+shape_file=${base_dir}'tng-100_z0.4_shape'${rdecider}'/shape'${rdecider}'_classes_fe-based_295haloIds.csv'
+# classify based on f-e; no masses; no a1a4
+if [ $classify_wfe_noa1a4 == 1 ];
+then
+    outdir=${base_outdir}'classify_wfe_noa1a4/'
+    # classification
+    python /Users/humnaawan/repos/3D-galaxies-kavli/runscripts/run_rf.py \
+                  --features_file=${features_file} \
+                  --shape_file=${shape_file} \
+                  --outdir=${outdir} --high_res --plot_feature_dists \
+                  --no_2nd_order_feats --good_radius_feats \
+                  --rdecider=${rdecider} --prolate_vs_not
 fi

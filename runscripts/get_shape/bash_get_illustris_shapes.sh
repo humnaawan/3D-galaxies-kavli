@@ -31,10 +31,10 @@ then
     if [ ${z0} == 0 ];
     then
         data_dir=${base_dir}'illustris_z0.4/'
-        outdir=${base_dir}'illustris_z0.4_shape100/'
-        python /Users/humnaawan/repos/3D-galaxies-kavli/runscripts/get_shape/run_get_shapes.py \
-                        --data_dir=${data_dir} --illustris --z=0.4 \
-                        --outdir=${outdir} --post_process_only
+        #outdir=${base_dir}'illustris_z0.4_shape100/'
+        #python /Users/humnaawan/repos/3D-galaxies-kavli/runscripts/get_shape/run_get_shapes.py \
+        #                --data_dir=${data_dir} --illustris --z=0.4 \
+        #                --outdir=${outdir} --post_process_only
         #
         outdir=${base_dir}'illustris_z0.4_shape50/'
         python /Users/humnaawan/repos/3D-galaxies-kavli/runscripts/get_shape/run_get_shapes.py \

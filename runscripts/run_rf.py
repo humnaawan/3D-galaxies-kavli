@@ -111,7 +111,7 @@ if not regress:
         shape_data['shape%s_class' % Rdecider][ shape_data['shape%s_class' % Rdecider] == 'S' ] = 'T'
 # consider the prolate vs. not case
 if not regress and prolate_vs_not:
-    shape_data[ 'shape%s_class' % Rdecider ][ 'shape%s_class' % Rdecider != 'P' ] = 'Not-P'
+    shape_data[ 'shape%s_class' % Rdecider ].values[ shape_data[ 'shape%s_class' % Rdecider ].values != 'P' ] = 'Not-P'
 
 # ------------------------------------------------------------------------------
 # read in the features

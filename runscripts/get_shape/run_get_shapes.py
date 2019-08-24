@@ -7,7 +7,7 @@ import numpy as np, pickle
 import pandas as pd
 from d3g2d import get_shape_main, readme as readme_obj, get_time_passed
 from d3g2d import get_shape_class
-from helpers_shape_plots import plot_shape_trends, plot_axis_ratios
+from helpers_shape_plots import plot_shape_trends, plot_axis_ratios, plot_fe
 # ------------------------------------------------------------------------------
 from optparse import OptionParser
 parser = OptionParser()
@@ -135,47 +135,53 @@ shape_data.to_csv('%s/%s' % (outdir, filename), index=False)
 readme.update(to_write='Saved %s\n' % filename)
 
 # ------------------------------------------------------------------------------
-# now classify
-update = 'Getting shape classification based on axis ratios... \n'
-filename1 = get_shape_class(outdir=outdir, shape_data_dict=shape_data,
-                           axis_ratios_based=True, Rdecider=Rdecider)
-readme.update(to_write='Saved %s\n' % filename1)
-
+# now classify based on different criteria
 threshold_T = 0.7
-update = 'Getting shape classification based on T... \n'
-filename2 = get_shape_class(outdir=outdir, shape_data_dict=shape_data,
-                           axis_ratios_based=False, Rdecider=Rdecider,
-                           threshold_T=threshold_T)
-readme.update(to_write='Saved %s\n' % filename2)
+fnames = {}
+for classification_type in [ 'axis-ratios-based', 'T-based', 'fe-based' ]:
+    update = 'Getting shape classification based on %s ... \n' % classification_type
+    filename = get_shape_class(outdir=outdir, shape_data_dict=shape_data,
+                               classification_type=classification_type, Rdecider=Rdecider)
+    readme.update(to_write='Saved %s\n' % filename)
+    fnames[classification_type] = filename
 
 # ------------------------------------------------------------------------------
 # plot some things
 # ------------------------------------------------------------------------------
 fig_dir = '%s/figs/' % outdir
 os.makedirs(fig_dir, exist_ok=True)
-# first the axis-ratios based data
-shape_class_data = pd.read_csv('%s/%s' % (outdir, filename1 ))
-colors_dict = {'P': 'r', 'O': 'b',  'T': 'c', 'S': 'g'}
-class_tag = 'axis-ratios-based'
-classtag_to_classname = {'P': 'Prolate', 'S': 'Spherical',
-                         'T': 'Triaxial', 'O': 'Oblate'}
-update = plot_shape_trends(outdir=fig_dir, data_dir=data_dir, sim_name=sim_name,
-                           shape_tag=shape_tag, Rdecider=Rdecider,
-                           shape_class_data=shape_class_data,
-                           colors_dict=colors_dict,
-                           classtag_to_classname=classtag_to_classname,
-                           class_tag=class_tag)
-readme.update(to_write=update)
 
-update = plot_axis_ratios(outdir=fig_dir, shape_data=shape_data, Rdecider=Rdecider,
-                          shape_class_data=shape_class_data,
-                          colors_dict=colors_dict,
-                          classtag_to_classname=classtag_to_classname,
-                          class_tag=class_tag)
-readme.update(to_write=update)
+colors_dict = {'P': 'r', 'O': 'b',  'T': 'c', 'S': 'g'}
+for classification_type in [ 'axis-ratios-based', 'fe-based' ]:
+    shape_class_data = pd.read_csv('%s/%s' % (outdir, fnames[classification_type] ))
+
+    class_tag = classification_type
+    classtag_to_classname = {'P': 'Prolate', 'S': 'Spherical',
+                             'T': 'Triaxial', 'O': 'Oblate'}
+    update = plot_shape_trends(outdir=fig_dir, data_dir=data_dir, sim_name=sim_name,
+                               shape_tag=shape_tag, Rdecider=Rdecider,
+                               shape_class_data=shape_class_data,
+                               colors_dict=colors_dict,
+                               classtag_to_classname=classtag_to_classname,
+                               class_tag=class_tag)
+    readme.update(to_write=update)
+
+    update = plot_axis_ratios(outdir=fig_dir, shape_data=shape_data, Rdecider=Rdecider,
+                              shape_class_data=shape_class_data,
+                              colors_dict=colors_dict,
+                              classtag_to_classname=classtag_to_classname,
+                              class_tag=class_tag)
+    readme.update(to_write=update)
+
+    update = plot_fe(outdir=fig_dir, shape_data=shape_data, Rdecider=Rdecider,
+                     shape_class_data=shape_class_data,
+                     colors_dict=colors_dict,
+                     classtag_to_classname=classtag_to_classname,
+                     class_tag=class_tag)
+    readme.update(to_write=update)
 
 # now the T based data
-shape_class_data = pd.read_csv('%s/%s' % (outdir, filename2 ))
+shape_class_data = pd.read_csv('%s/%s' % (outdir, fnames['T-based'] ))
 colors_dict = {'P': 'r', 'Not-P': 'b'}
 class_tag = 'T-based_thres%s' % threshold_T
 classtag_to_classname = {'P': r'Prolate (T$>$%s)' % threshold_T,
@@ -193,6 +199,13 @@ update = plot_axis_ratios(outdir=fig_dir, shape_data=shape_data, Rdecider=Rdecid
                           colors_dict=colors_dict,
                           classtag_to_classname=classtag_to_classname,
                           class_tag=class_tag)
+readme.update(to_write=update)
+
+update = plot_fe(outdir=fig_dir, shape_data=shape_data, Rdecider=Rdecider,
+                 shape_class_data=shape_class_data,
+                 colors_dict=colors_dict,
+                 classtag_to_classname=classtag_to_classname,
+                 class_tag=class_tag)
 readme.update(to_write=update)
 # ------------------------------------------------------------------------------
 # done

@@ -89,10 +89,9 @@ if not post_process_only:
 # now save the shape data (b/a, c/a, T) for all the haloes compiled together
 # initiate storing dictionaru
 shape_data = {}
-for key in ['b/a', 'c/a', 'T']:
+for key in ['b/a', 'c/a', 'T', 'p', 'q', 'flattening', 'elongation']:
     shape_data[ '%s_%s' % (key, Rdecider) ] = []
 shape_data['haloId'] = []
-
 # loop over the haloIds
 for haloId in haloIds:
     # looking at the folder for this halo
@@ -111,6 +110,10 @@ for haloId in haloIds:
         data = pickle.load(f)
     # add triaxiality
     data['T'] = (1 -  data['b/a'] ** 2 ) / (1 -  data['c/a'] ** 2 )
+    data['p'] = data['c/a'] / data['b/a']
+    data['q'] = data['b/a']
+    data['flattening'] = np.sqrt( 1 - data['p'] ** 2 )
+    data['elongation'] = np.sqrt( 1 - data['q'] ** 2 )
     # find value specified rstar
     ind = np.where( data['Rstar'] == Rdecider )[0]
     # store the values for this Rstar
@@ -118,6 +121,10 @@ for haloId in haloIds:
     shape_data['b/a_%s' % Rdecider] += [ data['b/a'][ind] ]
     shape_data['c/a_%s' % Rdecider] += [ data['c/a'][ind] ]
     shape_data['T_%s' % Rdecider] += [ data['T'][ind] ]
+    shape_data['p_%s' % Rdecider] += [ data['p'][ind] ]
+    shape_data['q_%s' % Rdecider] += [ data['q'][ind] ]
+    shape_data['flattening_%s' % Rdecider] += [ data['flattening'][ind] ]
+    shape_data['elongation_%s' % Rdecider] += [ data['elongation'][ind] ]
 # flatten the data
 for key in shape_data:
     shape_data[key] = np.array( shape_data[key] ).flatten()

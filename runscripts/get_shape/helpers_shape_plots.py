@@ -69,7 +69,8 @@ def plot_shape_trends(outdir, data_dir, sim_name, shape_tag, Rdecider,
 
     # finalize plots
     # figure 1
-    axes1[0].set_title('Total: %s galaxies' % (i+1) )
+    ngal = i+1
+    axes1[0].set_title('Total: %s galaxies' % ngal )
     axes1[0].set_ylabel('b/a')
     axes1[1].set_ylabel('c/a')
     axes1[2].set_ylabel('T')
@@ -91,7 +92,7 @@ def plot_shape_trends(outdir, data_dir, sim_name, shape_tag, Rdecider,
     plt.close(fig1)
     update = 'Saved %s\n' % filename
     # figure 2
-    axes2[0].set_title('Total: %s galaxies' % (i+1) )
+    axes2[0].set_title('Total: %s galaxies' % ngal )
     axes2[0].set_ylabel(r'$\Delta$ b/a')
     axes2[1].set_ylabel(r'$\Delta$ c/a')
     axes2[2].set_ylabel(r'$\Delta$ T')
@@ -153,6 +154,44 @@ def plot_axis_ratios(outdir, shape_data, Rdecider,
     plt.legend(custom_lines, class_labels, loc='best', frameon=True)
     # save plot
     filename = 'axis_ratios_classification_shape%s%s.png' % (Rdecider, class_tag)
+    plt.savefig('%s/%s'%(outdir, filename), format='png',
+                bbox_inches='tight')
+    plt.close('all')
+
+    return 'Saved %s\n' % filename
+
+# ------------------------------------------------------------------------------
+def plot_fe(outdir, shape_data, Rdecider,
+            shape_class_data, colors_dict, classtag_to_classname, class_tag):
+    if class_tag != '' and class_tag is not None: class_tag = '_%s' % class_tag
+    # also plot the axis ratios
+    counters = {}
+    plt.clf()
+    for shape in colors_dict.keys():
+        ind = np.where( shape_class_data['shape%s_class' % Rdecider] == shape )[0]
+        counters[shape] = len(ind)
+        plt.plot( shape_data['elongation_%s' % Rdecider][ind],
+                 shape_data['flattening_%s' % Rdecider][ind], '.',
+                 color=colors_dict[shape])
+    # add 1-1 line; also the analog as in Hongyu's Fig 2
+    x = [0, 1]
+    y = [0.5, 0.5]
+    plt.plot(x, y, 'k--')
+    plt.plot(y, x, 'k--')
+    # plot details
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+    plt.xlabel('elongation_%s' % Rdecider)
+    plt.ylabel('flattening_%s' % Rdecider)
+    # add legend
+    custom_lines, class_labels = [], []
+    for shape_class in colors_dict.keys():
+        class_labels += ['%s (N=%s)' % (classtag_to_classname[shape_class], counters[shape_class]) ]
+        custom_lines += [Line2D([0], [0], color=colors_dict[shape_class], lw=10) ]
+
+    plt.legend(custom_lines, class_labels, loc='best', frameon=True)
+    # save plot
+    filename = 'axis_fe-plot_shape%s%s.png' % (Rdecider, class_tag)
     plt.savefig('%s/%s'%(outdir, filename), format='png',
                 bbox_inches='tight')
     plt.close('all')

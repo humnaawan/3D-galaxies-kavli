@@ -147,12 +147,15 @@ def get_shape_main(source_dir, z, fname, illustris=False, Rstar=None):
 
     return filename
 
-def get_shape_class(outdir, shape_data_dict, axis_ratios_based, Rdecider, threshold_T=0.7):
+def get_shape_class(outdir, shape_data_dict, classification_type, Rdecider, threshold_T=0.7):
+    allowed = [ 'axis-ratios-based', 'T-based', 'fe-based' ]
+    if classification_type not in allowed:
+        raise ValueError( 'classification_type must be one of the following: %s; input: %s' % (allowed, classification_type) )
     # if axis_ratios_based = True: classification based on c/a, b/a
     # otherwise based on triaxiality
     # shape_data_dict should be a pandas dataframe
     shape = np.array( ['undecided'] * len( shape_data_dict ) , dtype=str)
-    if axis_ratios_based:
+    if classification_type == 'axis-ratios-based':
         arr_ba = shape_data_dict['b/a_%s' % Rdecider].values
         arr_ca = shape_data_dict['c/a_%s' % Rdecider].values
 
@@ -166,17 +169,31 @@ def get_shape_class(outdir, shape_data_dict, axis_ratios_based, Rdecider, thresh
         # oblates
         ind = np.where( (( arr_ba - arr_ca) > 0.2 ) & (arr_ba > 0.8 ) )[0]
         shape[ind] = 'O'
-    else:
+    elif classification_type == 'T-based':
         shape[:] = 'Not-P'
         arr_T = shape_data_dict['T_%s' % Rdecider].values
         ind_prolate = np.where(  arr_T > threshold_T )[0]
         shape[ind_prolate] = 'P'
+    elif classification_type == 'fe-based':
+        arr_f = shape_data_dict['flattening_%s' % Rdecider].values
+        arr_e = shape_data_dict['elongation_%s' % Rdecider].values
+        shape[:] = 'S'
+        # oblates
+        ind = np.where( (arr_f >= 0.5 ) & (arr_e <= 0.5 ) )[0]
+        shape[ind] = 'O'
+        # triaxials
+        ind = np.where( (arr_f >= 0.5 ) & (arr_e >= 0.5 ) )[0]
+        shape[ind] = 'T'
+        # prolates
+        ind = np.where( (arr_f < 0.5 ) & (arr_e > 0.5 ) )[0]
+        shape[ind] = 'P'
+    else:
+        raise ValueError( 'Somethings wrong. Input classification_type: %s' % classification_type )
     # assemble a dataframe
     data = pd.DataFrame( { 'shape%s_class' % Rdecider: shape,
                           'haloId' : shape_data_dict['haloId'] } )
-    if axis_ratios_based:
-        tag = 'axis-ratios-based'
-    else:
+    tag = classification_type
+    if classification_type == 'T-based':
         tag = 'T-based_%sthres' % threshold_T
     filename = 'shape%s_classes_%s_%shaloIds.csv' % (Rdecider, tag, len(shape_data_dict['haloId']) )
 

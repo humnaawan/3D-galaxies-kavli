@@ -61,17 +61,15 @@ os.makedirs(fig_dir, exist_ok=True)
 start_time = time.time()
 # ------------------------------------------------------------------------------
 # read in shape data to get the haloIds
-file = [ f for f in os.listdir(shape_datapath) if \
-        f.startswith('shape%s_classes' % Rdecider) and f.__contains__('T-based')][0]
-shape_data_T_based = pd.read_csv('%s/%s' % (shape_datapath, file) )
-
-file = [ f for f in os.listdir(shape_datapath) if \
-        f.startswith('shape%s_classes' % Rdecider) and f.__contains__('axis-ratios-based')][0]
-shape_data_abc_based = pd.read_csv('%s/%s' % (shape_datapath, file) )
+shape_data = {}
+for classification_type in [ 'axis-ratios-based', 'T-based', 'fe-based' ]:
+    file = [ f for f in os.listdir(shape_datapath) if \
+            f.startswith('shape%s_classes' % Rdecider) and f.__contains__(classification_type)][0]
+    shape_data[classification_type] = pd.read_csv('%s/%s' % (shape_datapath, file) )
 # ------------------------------------------------------------------------------
 # now read the summary data and assemble features
 # follow the same order are haloId in the shape data for easy matching later on
-for i, haloId in enumerate(shape_data_T_based['haloId']):
+for i, haloId in enumerate(shape_data['T-based']['haloId']):
     filename = [f for f in os.listdir(summary_datapath) if f.__contains__('_%s_'%haloId)]
     if len(filename) != 1:
         raise ValueError('Somethings wrong: haloId %s: file array: %s' % ( haloId, file) )
@@ -100,46 +98,47 @@ readme.update(to_write='Saved %s in %s\n' % (filename, outdir))
 
 # --------------------------------------------------------------------------
 # create some plots
-# axis-ratios based
-shape_class_data = shape_data_abc_based
-colors_dict = {'P': 'r', 'O': 'b',  'T': 'c', 'S': 'g'}
-class_tag = 'axis-ratios-based'
-classtag_to_classname = {'P': 'Prolate', 'S': 'Spherical',
-                         'T': 'Triaxial', 'O': 'Oblate'}
-update = summary_data_plots(outdir=fig_dir, summary_datapath=summary_datapath,
-                            Rdecider=Rdecider,
-                            shape_class_data=shape_class_data,
-                            colors_dict=colors_dict,
-                            classtag_to_classname=classtag_to_classname,
-                            class_tag=class_tag, summed_data=summed_data, mass_cut=False)
-readme.update(to_write=update)
-update = summary_data_plots(outdir=fig_dir, summary_datapath=summary_datapath,
-                            Rdecider=Rdecider,
-                            shape_class_data=shape_class_data,
-                            colors_dict=colors_dict,
-                            classtag_to_classname=classtag_to_classname,
-                            class_tag=class_tag, summed_data=summed_data,
-                            mass_cut=True, mass_thresh=11.4)
-readme.update(to_write=update)
-
-shape_class_arr = shape_class_data['shape%s_class' % Rdecider].values
-for key in ['logm100', 'logm', 'logm30']:
-    logmass = feats[key].values
-    update = plot_hongyus_analog(outdir=fig_dir, logmass=logmass,
-                                 shape_class_arr=shape_class_arr,
-                                 Rdecider=Rdecider, class_tag=class_tag,
-                                 mass_tag=key )
+for classification_type in [ 'axis-ratios-based', 'fe-based' ]:
+    shape_class_data = shape_data[classification_type]
+    colors_dict = {'P': 'r', 'O': 'b',  'T': 'c', 'S': 'g'}
+    class_tag = classification_type
+    classtag_to_classname = {'P': 'Prolate', 'S': 'Spherical',
+                             'T': 'Triaxial', 'O': 'Oblate'}
+    update = summary_data_plots(outdir=fig_dir, summary_datapath=summary_datapath,
+                                Rdecider=Rdecider,
+                                shape_class_data=shape_class_data,
+                                colors_dict=colors_dict,
+                                classtag_to_classname=classtag_to_classname,
+                                class_tag=class_tag, summed_data=summed_data, mass_cut=False)
+    readme.update(to_write=update)
+    update = summary_data_plots(outdir=fig_dir, summary_datapath=summary_datapath,
+                                Rdecider=Rdecider,
+                                shape_class_data=shape_class_data,
+                                colors_dict=colors_dict,
+                                classtag_to_classname=classtag_to_classname,
+                                class_tag=class_tag, summed_data=summed_data,
+                                mass_cut=True, mass_thresh=11.4)
     readme.update(to_write=update)
 
-fnames = plot_highd_data(outdir=fig_dir, features=feats.values,
-                         targets=shape_class_arr,
-                         title='classification based on axis ratios',
-                         figlabel='axis-ratios-based_shape%s' % Rdecider)
-readme.update(to_write='Saved %s\n' % fnames)
+    shape_class_arr = shape_class_data['shape%s_class' % Rdecider].values
+    for key in ['logm100', 'logm', 'logm30']:
+        logmass = feats[key].values
+        update = plot_hongyus_analog(outdir=fig_dir, logmass=logmass,
+                                     shape_class_arr=shape_class_arr,
+                                     Rdecider=Rdecider, class_tag=class_tag,
+                                     mass_tag=key )
+        readme.update(to_write=update)
+
+    fnames = plot_highd_data(outdir=fig_dir, features=feats.values,
+                             targets=shape_class_arr,
+                             title='%s classification' % classification_type,
+                             figlabel='%s_shape%s' % (classification_type, Rdecider) )
+    readme.update(to_write='Saved %s\n' % fnames)
 
 
 # repeat for T-based stuff
-shape_class_data = shape_data_T_based
+classification_type = 'T-based'
+shape_class_data = shape_data[classification_type]
 threshold_T = 0.7
 colors_dict = {'P': 'r', 'Not-P': 'b'}
 class_tag = 'T-based_thres%s' % threshold_T
@@ -172,8 +171,8 @@ for key in ['logm100', 'logm', 'logm30']:
 
 fnames = plot_highd_data(outdir=fig_dir, features=feats.values,
                          targets=shape_class_arr,
-                         title='classification based on axis ratios',
-                         figlabel='axis-ratios-based_shape%s' % Rdecider)
+                         title='%s classification' % classification_type,
+                         figlabel='%s_shape%s' % (classification_type, Rdecider) )
 readme.update(to_write='Saved %s\n' % fnames)
 
 # ----------------------------------------------------------------------

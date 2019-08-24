@@ -5,7 +5,7 @@ base_dir='/Users/humnaawan/repos/3D-galaxies-kavli/'
 for proj in xy yz xz
 do
     summary_datapath=${base_dir}'data/sum_illustris/'${proj}'/'
-    for rdecider in 50 100
+    for rdecider in 50 #100
     do
         echo 'Running for '${proj}' for Rdecider = '${rdecider}
         shape_datapath=${base_dir}'outputs/illustris_z0.4_shape'${rdecider}'/'

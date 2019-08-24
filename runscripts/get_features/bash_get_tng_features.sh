@@ -9,12 +9,12 @@ if [ $older == 1 ];
 then
     summary_datapath=${base_dir}'data/tng_highres/xy/'
 
-    shape_datapath=${base_dir}'outputs/tng-100_z0.4_shape100/'
-    outdir=${base_dir}'outputs/tng-100_z0.4_shape100_features/'
-    python /Users/humnaawan/repos/3D-galaxies-kavli/runscripts/get_features/get_features.py \
-                    --summary_datapath=${summary_datapath} \
-                    --shape_datapath=${shape_datapath} --outdir=${outdir} \
-                    --data_tag='xy'
+    #shape_datapath=${base_dir}'outputs/tng-100_z0.4_shape100/'
+    #outdir=${base_dir}'outputs/tng-100_z0.4_shape100_features/'
+    #python /Users/humnaawan/repos/3D-galaxies-kavli/runscripts/get_features/get_features.py \
+    #                --summary_datapath=${summary_datapath} \
+    #                --shape_datapath=${shape_datapath} --outdir=${outdir} \
+    #                --data_tag='xy'
 
     shape_datapath=${base_dir}'outputs/tng-100_z0.4_shape50/'
     outdir=${base_dir}'outputs/tng-100_z0.4_shape50_features/'
@@ -29,7 +29,7 @@ then
     for proj in xy yz xz
     do
         summary_datapath=${base_dir}'data/sum_tng/'${proj}'/'
-        for rdecider in 50 100
+        for rdecider in 50 #100
         do
             echo 'Running for '${proj}' for Rdecider = '${rdecider}
             shape_datapath=${base_dir}'outputs/tng-100_z0.4_shape'${rdecider}'/'

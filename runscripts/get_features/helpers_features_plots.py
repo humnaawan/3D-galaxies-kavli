@@ -78,7 +78,11 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
         fig4, axes4 = plt.subplots(nrows, ncols)
         fig4.set_size_inches(15, 5 * nrows)
         plt.subplots_adjust(wspace=0.3, hspace=0.2, top=0.9)
-
+    # figure r_shape, e_shape
+    fig5, axes5 = plt.subplots(1, 1)
+    fig5.set_size_inches(10, 5)
+    plt.subplots_adjust(wspace=0.3, hspace=0.2, top=0.9)
+    #
     alpha = 0.3
     shape_class_data['shape%s_class' % Rdecider] = np.array(shape_class_data['shape%s_class' % Rdecider])
 
@@ -95,8 +99,8 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
         data = np.load('%s/%s' % (summary_datapath, filename))
         if summed_data:
             data = data[()]
-            mass_key = 'aper_maper'
-            data['aper_maper'] = np.log10( data['aper_maper'] )
+            mass_key = 'aper_logms'
+            data['aper_logms'] = np.log10( data['aper_maper'] )
         else:
             mass_key = 'aper_logms'
 
@@ -135,6 +139,9 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
             # plot logm
             axes3.plot( data['aper_rkpc'], data[mass_key], '.-',
                        alpha=alpha, color=colors_dict[shape_class])
+            # plot e_shape
+            axes5.plot( data['rkpc_shape'], data['e_shape'], '.-',
+                       alpha=alpha, color=colors_dict[shape_class])
     # plot details
     tag = ''  # for the filename
     title = ''
@@ -153,6 +160,7 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
     axes1[0].set_title( title )
     axes2[0].set_title( title )
     axes3.set_title( title )
+    axes5.set_title( title )
     # axis labels
     for j, key in enumerate( toplot_pixshape ):
         axes1[j].set_ylabel( key )
@@ -169,6 +177,9 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
     axes3.set_ylabel(mass_key)
     axes3.set_xlabel('aper_rkpc')
 
+    axes5.set_ylabel('e_shape')
+    axes5.set_xlabel('rkpc_shape')
+
     # add legend
     custom_lines, class_labels = [], []
     for shape_class in colors_dict.keys():
@@ -176,7 +187,8 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
         custom_lines += [ Line2D([0], [0], color=colors_dict[shape_class], lw=10) ]
     axes1[0].legend(custom_lines, class_labels, loc='best', frameon=True)
     axes2[0].legend(custom_lines, class_labels, loc='best', frameon=True)
-    axes3.legend(custom_lines, class_labels, loc='best', frameon=True)
+    axes3.legend(custom_lines, class_labels, loc='lower right', frameon=True)
+    axes5.legend(custom_lines, class_labels, loc='upper right', frameon=True)
     # save figure
     filename = 'rshape_profiles_%sgals_shape%s%s%s.png' % (gal_count, Rdecider, class_tag, tag)
     fig1.savefig('%s/%s' % (outdir, filename), format='png',
@@ -192,10 +204,17 @@ def summary_data_plots(outdir, summary_datapath, Rdecider,
     update += 'Saved %s\n' % filename
 
     # save figure
-    filename = 'aper_profiles_%sgals_shape%s%s%s.png' % (gal_count, Rdecider, class_tag, tag)
+    filename = 'maper_profiles_%sgals_shape%s%s%s.png' % (gal_count, Rdecider, class_tag, tag)
     fig3.savefig('%s/%s' % (outdir, filename), format='png',
                  bbox_inches='tight')
     plt.close(fig3)
+    update += 'Saved %s\n' % filename
+
+    # save figure
+    filename = 'eshape_profiles_%sgals_shape%s%s%s.png' % (gal_count, Rdecider, class_tag, tag)
+    fig5.savefig('%s/%s' % (outdir, filename), format='png',
+                 bbox_inches='tight')
+    plt.close(fig5)
     update += 'Saved %s\n' % filename
 
     if plot_2nd_order:

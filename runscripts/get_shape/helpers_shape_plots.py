@@ -101,7 +101,9 @@ def plot_shape_trends(outdir, data_dir, sim_name, shape_tag, Rdecider,
     fig2.set_size_inches(15, 15)
     # add legend
     axes2[0].legend(custom_lines, class_labels,
-                    bbox_to_anchor=(1, 0.9), frameon=True)
+                    #bbox_to_anchor=(1, 0.9),
+                    loc='upper right',
+                    frameon=True)
     # save figure
     filename = 'shape%s%s_trends_differences.png' % (Rdecider, class_tag)
     fig2.savefig('%s/%s'%(outdir, filename), format='png',
@@ -115,7 +117,9 @@ def plot_shape_trends(outdir, data_dir, sim_name, shape_tag, Rdecider,
     for i in range(3):
         axes3[i].set_ylabel('Counts')
     axes3[0].legend(custom_lines, class_labels,
-                    bbox_to_anchor=(1, 0.9), frameon=False)
+                    loc='upper left',
+                    #bbox_to_anchor=(1, 0.9),
+                    frameon=True)
     fig3.set_size_inches(15, 15)
     filename = 'shape%s%s_histograms.png' % (Rdecider, class_tag)
     fig3.savefig('%s/%s'%(outdir, filename), format='png',
